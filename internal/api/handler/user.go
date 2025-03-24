@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/google/uuid"
 
 	"cloud-sprint/internal/api/request"
 	"cloud-sprint/internal/api/response"
@@ -34,7 +35,7 @@ func NewUserHandler(store db.Querier) *UserHandler {
 // @Failure 500 {object} response.ErrorResponse
 // @Router /users/me [get]
 func (h *UserHandler) GetCurrentUser(c *fiber.Ctx) error {
-	userID, ok := c.Locals("userID").(int64)
+	userID, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
 		return fiber.NewError(fiber.StatusUnauthorized, "Unauthorized")
 	}
@@ -65,12 +66,15 @@ func (h *UserHandler) GetCurrentUser(c *fiber.Ctx) error {
 // @Failure 500 {object} response.ErrorResponse
 // @Router /users/{id} [get]
 func (h *UserHandler) GetUser(c *fiber.Ctx) error {
-	id, err := c.ParamsInt("id")
+	id := c.Params("id")
+
+	// Parse user ID
+	parsedID, err := uuid.Parse(id)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid user ID")
+		return response.BadRequest(c, "Invalid user ID", nil)
 	}
 
-	user, err := h.store.GetUserByID(c.Context(), int64(id))
+	user, err := h.store.GetUserByID(c.Context(), parsedID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return fiber.NewError(fiber.StatusNotFound, "User not found")
@@ -132,37 +136,36 @@ func (h *UserHandler) ListUsers(c *fiber.Ctx) error {
 // @Failure 500 {object} response.ErrorResponse
 // @Router /users/{id} [put]
 func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
-	// Get the user ID from the URL
-	id, err := c.ParamsInt("id")
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid user ID")
-	}
+	id := c.Params("id")
 
-	// Get the current user ID
-	currentUserID, ok := c.Locals("userID").(int64)
+	currentUserID, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "Unauthorized")
+		return response.Unauthorized(c, "Unauthorized")
 	}
 
-	// Only allow users to update their own profile
-	if currentUserID != int64(id) {
-		return fiber.NewError(fiber.StatusForbidden, "Cannot update other users")
+	// Parse user ID
+	parsedID, err := uuid.Parse(id)
+	if err != nil {
+		return response.BadRequest(c, "Invalid user ID", nil)
+	}
+	if currentUserID != parsedID {
+		return response.BadRequest(c, "Cannot update other users", nil)
 	}
 
 	// Parse request body
 	var req request.UpdateUserRequest
 	if err := c.BodyParser(&req); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid request body")
+		return response.BadRequest(c, "Invalid request body", nil)
 	}
 
 	// Validate request
 	if err := req.Validate(); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		return response.BadRequest(c, err.Error(), nil)
 	}
 
 	// Create update params
 	params := db.UpdateUserParams{
-		ID: int64(id),
+		ID: parsedID,
 	}
 
 	// Set optional fields
@@ -226,28 +229,27 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 // @Failure 500 {object} response.ErrorResponse
 // @Router /users/{id} [delete]
 func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
-	// Get the user ID from the URL
-	id, err := c.ParamsInt("id")
-	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid user ID")
-	}
+	id := c.Params("id")
 
-	// Get the current user ID
-	currentUserID, ok := c.Locals("userID").(int64)
+	currentUserID, ok := c.Locals("userID").(uuid.UUID)
 	if !ok {
-		return fiber.NewError(fiber.StatusUnauthorized, "Unauthorized")
+		return response.Unauthorized(c, "Unauthorized")
 	}
 
 	// Only allow users to delete their own profile
-	if currentUserID != int64(id) {
-		return fiber.NewError(fiber.StatusForbidden, "Cannot delete other users")
+	parsedID, err := uuid.Parse(id)
+	if err != nil {
+		return response.BadRequest(c, "Invalid user ID", nil)
+	}
+	if currentUserID != parsedID {
+		return response.BadRequest(c, "Cannot delete other users", nil)
 	}
 
 	// Delete user
-	err = h.store.DeleteUser(c.Context(), int64(id))
+	err = h.store.DeleteUser(c.Context(), parsedID)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to delete user")
+		return response.InternalServerError(c, "Failed to delete user")
 	}
 
-	return response.NoContent(c)
+	return response.Success(c, nil, "User deleted successfully")
 }

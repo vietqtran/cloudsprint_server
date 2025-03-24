@@ -4,16 +4,18 @@ import (
 	"time"
 
 	db "cloud-sprint/internal/db/sqlc"
+
+	"github.com/google/uuid"
 )
 
 // UserResponse represents a user response
 type UserResponse struct {
-	ID        int64     `json:"id"`
-	Username  string    `json:"username"`
-	Email     string    `json:"email"`
-	FullName  string    `json:"full_name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        uuid.UUID     `json:"id"`
+	Username  string    		`json:"username"`
+	Email     string    		`json:"email"`
+	FullName  string    		`json:"full_name"`
+	CreatedAt time.Time 		`json:"created_at"`
+	UpdatedAt time.Time 		`json:"updated_at"`
 }
 
 // NewUserResponse creates a new user response from a user

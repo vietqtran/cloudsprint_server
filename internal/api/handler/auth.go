@@ -54,7 +54,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to hash password")
+		return response.BadRequest(c, "Failed to hash password", nil)
 	}
 
 	user, err := h.store.CreateUser(c.Context(), db.CreateUserParams{
@@ -64,7 +64,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		FullName:       req.FullName,
 	})
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to create user")
+		return response.BadRequest(c, "Failed to create user", nil)
 	}
 
 	userResponse := response.NewUserResponse(user)
@@ -96,14 +96,14 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	user, err := h.store.GetUser(c.Context(), req.Username)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return fiber.NewError(fiber.StatusUnauthorized, "Invalid username or password")
+			return response.Unauthorized(c, "Invalid username or password")
 		}
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to find user")
+		return response.InternalServerError(c, "Failed to get user")
 	}
 
 	err = util.CheckPassword(req.Password, user.HashedPassword)
 	if err != nil {
-		return fiber.NewError(fiber.StatusUnauthorized, "Invalid username or password")
+		return response.Unauthorized(c, "Invalid username or password")
 	}
 
 	accessToken, accessPayload, err := h.tokenMaker.CreateToken(
@@ -112,7 +112,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		h.config.JWT.TokenDuration,
 	)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to create access token")
+		return response.InternalServerError(c, "Failed to create access token")
 	}
 
 	refreshToken, _, err := h.tokenMaker.CreateToken(
@@ -121,7 +121,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		h.config.JWT.TokenDuration*24, // Refresh token lasts 24 times longer
 	)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to create refresh token")
+		return response.InternalServerError(c, "Failed to create refresh token")
 	}
 
 	// Create session
@@ -134,7 +134,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		ExpiresAt:    accessPayload.ExpiredAt.Add(h.config.JWT.TokenDuration * 24),
 	})
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to create session")
+		return response.InternalServerError(c, "Failed to create session")
 	}
 
 	loginResponse := response.NewLoginResponse(user, accessToken, refreshToken, session.ID.String())
@@ -166,50 +166,54 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 	// Verify the refresh token
 	refreshPayload, err := h.tokenMaker.VerifyToken(req.RefreshToken)
 	if err != nil {
-		return fiber.NewError(fiber.StatusUnauthorized, "Invalid or expired refresh token")
+		return response.Unauthorized(c, "Invalid refresh token")
 	}
 
 	// Check if the session exists
 	sessionID, err := uuid.Parse(req.SessionID)
 	if err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, "Invalid session ID")
+		return response.BadRequest(c, "Invalid session ID", nil)
 	}
 
 	session, err := h.store.GetSession(c.Context(), sessionID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return fiber.NewError(fiber.StatusUnauthorized, "Session not found")
+			return response.Unauthorized(c, "Session not found")
 		}
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to get session")
+		return response.InternalServerError(c, "Failed to get session")
 	}
 
 	// Check if session is blocked
 	if session.IsBlocked {
-		return fiber.NewError(fiber.StatusUnauthorized, "Session is blocked")
+		return response.Unauthorized(c, "Session is blocked")
 	}
 
 	// Check if session is expired
 	if time.Now().After(session.ExpiresAt) {
-		return fiber.NewError(fiber.StatusUnauthorized, "Session has expired")
+		return response.Unauthorized(c, "Session expired")
 	}
 
 	// Check if the refresh token matches
 	if session.RefreshToken != req.RefreshToken {
-		return fiber.NewError(fiber.StatusUnauthorized, "Refresh token doesn't match")
+		return response.Unauthorized(c, "Refresh token doesn't match")
 	}
 
 	// Check if the user ID matches
-	if session.UserID != refreshPayload.UserID {
-		return fiber.NewError(fiber.StatusUnauthorized, "User ID doesn't match")
+	refreshUserID, err := uuid.Parse(refreshPayload.UserID)
+	if err != nil {
+		return response.InternalServerError(c, "Failed to parse user ID")
+	}
+	if session.UserID != refreshUserID {
+		return response.Unauthorized(c, "User ID doesn't match")
 	}
 
 	// Get the user
 	user, err := h.store.GetUserByID(c.Context(), session.UserID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return fiber.NewError(fiber.StatusUnauthorized, "User not found")
+			return response.NotFound(c, "User not found")
 		}
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to find user")
+		return response.InternalServerError(c, "Failed to get user")
 	}
 
 	// Create new access token
@@ -219,7 +223,7 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 		h.config.JWT.TokenDuration,
 	)
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, "Failed to create access token")
+		return response.InternalServerError(c, "Failed to create access token")
 	}
 
 	refreshResponse := response.RefreshTokenResponse{

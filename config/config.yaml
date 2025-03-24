@@ -5,7 +5,7 @@ SERVER:
 
 DATABASE:
   DRIVER: "postgres"
-  SOURCE: "postgresql://neondb_owner:J1Kmrk5PNRqg@ep-white-tooth-a1uuj3k9.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+  SOURCE: "postgresql://postgres:password@localhost:5432/postgres?sslmode=disable"
   MIGRATION_URL: "file://db/migration"
 
 JWT:

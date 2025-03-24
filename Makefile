@@ -1,7 +1,7 @@
 .PHONY: all build run test clean migrate sqlc swag docker docker-run
 
 # Project variables
-BINARY_NAME=go-postgres-api
+BINARY_NAME=cloudsprint_server
 DB_URL=postgresql://postgres:password@localhost:5432/postgres?sslmode=disable
 MIGRATION_URL=file://db/migration
 
@@ -17,7 +17,7 @@ run: build
 
 watch:
 	@echo "Watching for file changes..."
-	go install github.com/cosmtrek/air@latest
+	go install github.com/air-verse/air@latest
 	air
 
 test:
@@ -27,13 +27,11 @@ test:
 clean:
 	@echo "Cleaning..."
 	go clean
-	rm -f $(BINARY_NAME)
-	rm -rf internal/db/sqlc
 
 sqlc:
 	@echo "Generating SQLC code..."
 	go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.20.0
-	sqlc generate
+	sqlc generate -f db/sqlc.yaml
 
 swag:
 	@echo "Generating Swagger documentation..."

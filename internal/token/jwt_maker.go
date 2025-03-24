@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 )
 
 // Different types of errors returned by the VerifyToken function
@@ -17,19 +18,19 @@ var (
 // Payload contains the payload data of the token
 type Payload struct {
 	ID        string    `json:"id"`
-	UserID    int64     `json:"user_id"`
+	UserID    string     `json:"user_id"`
 	Username  string    `json:"username"`
 	IssuedAt  time.Time `json:"issued_at"`
 	ExpiredAt time.Time `json:"expired_at"`
 }
 
 // NewPayload creates a new token payload with a specific username and duration
-func NewPayload(userID int64, username string, duration time.Duration) (*Payload, error) {
+func NewPayload(userID uuid.UUID, username string, duration time.Duration) (*Payload, error) {
 	tokenID := fmt.Sprintf("%d_%s_%d", userID, username, time.Now().UnixNano())
 
 	payload := &Payload{
 		ID:        tokenID,
-		UserID:    userID,
+		UserID:    userID.String(),
 		Username:  username,
 		IssuedAt:  time.Now(),
 		ExpiredAt: time.Now().Add(duration),
@@ -48,7 +49,7 @@ func (payload *Payload) Valid() error {
 // Maker is an interface for managing tokens
 type Maker interface {
 	// CreateToken creates a new token for a specific username and duration
-	CreateToken(userID int64, username string, duration time.Duration) (string, *Payload, error)
+	CreateToken(userID uuid.UUID, username string, duration time.Duration) (string, *Payload, error)
 
 	// VerifyToken checks if the token is valid or not
 	VerifyToken(token string) (*Payload, error)
@@ -68,7 +69,7 @@ func NewJWTMaker(secretKey string) (Maker, error) {
 }
 
 // CreateToken creates a new token for a specific username and duration
-func (maker *JWTMaker) CreateToken(userID int64, username string, duration time.Duration) (string, *Payload, error) {
+func (maker *JWTMaker) CreateToken(userID uuid.UUID, username string, duration time.Duration) (string, *Payload, error) {
 	payload, err := NewPayload(userID, username, duration)
 	if err != nil {
 		return "", nil, err

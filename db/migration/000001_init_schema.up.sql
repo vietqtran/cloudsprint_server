@@ -1,5 +1,5 @@
 CREATE TABLE "users" (
-  "id" BIGSERIAL PRIMARY KEY,
+  "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
   "username" varchar UNIQUE NOT NULL,
   "email" varchar UNIQUE NOT NULL,
   "hashed_password" varchar NOT NULL,
@@ -9,8 +9,8 @@ CREATE TABLE "users" (
 );
 
 CREATE TABLE "sessions" (
-  "id" uuid PRIMARY KEY,
-  "user_id" bigint NOT NULL,
+  "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
+  "user_id" uuid NOT NULL,
   "refresh_token" varchar NOT NULL,
   "user_agent" varchar NOT NULL,
   "client_ip" varchar NOT NULL,
