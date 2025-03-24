@@ -1,0 +1,17 @@
+ENVIRONMENT: "development"
+
+SERVER:
+  PORT: "8080"
+
+DATABASE:
+  DRIVER: "postgres"
+  SOURCE: "postgresql://neondb_owner:J1Kmrk5PNRqg@ep-white-tooth-a1uuj3k9.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+  MIGRATION_URL: "file://db/migration"
+
+JWT:
+  SECRET_KEY: "your-super-secret-key-change-this-in-production"
+  TOKEN_DURATION: "24h"
+
+LOG:
+  LEVEL: "debug"
+  PATH: "./logs"
