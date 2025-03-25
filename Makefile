@@ -18,7 +18,11 @@ run: build
 watch:
 	@echo "Watching for file changes..."
 	go install github.com/air-verse/air@latest
+ifeq ($(OS),Windows_NT)
 	air
+else
+	air -c .air-linux.toml
+endif
 
 test:
 	@echo "Running tests..."
@@ -40,7 +44,10 @@ swag:
 
 postgres:
 	@echo "Starting PostgreSQL container..."
+	docker stop postgres
+	docker rm postgres
 	docker run --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres:14-alpine
+	@sleep 3
 
 createdb:
 	@echo "Creating database..."
@@ -73,4 +80,4 @@ docker-run: docker
 	@echo "Running Docker container..."
 	docker run -p 8080:8080 --name $(BINARY_NAME) -d $(BINARY_NAME)
 
-setup: postgres createdb migrate-up sqlc swag build
+setup: clean postgres migrate-up sqlc swag build
