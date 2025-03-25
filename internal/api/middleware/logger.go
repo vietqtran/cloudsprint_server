@@ -34,6 +34,12 @@ func NewLogger(logger *zap.Logger) fiber.Handler {
 		// Get request headers (optional)
 		userAgent := c.Get("User-Agent")
 
+		// Get error
+		error := c.Context().Err()
+		if error != nil {
+			logger.Error("request failed", zap.String("error", error.Error()))
+		}
+
 		// Log request
 		logger.Info("request processed",
 			zap.Int("status", statusCode),
