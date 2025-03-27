@@ -2,26 +2,17 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/recover"
-	"github.com/gofiber/swagger"
-	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 
 	"cloud-sprint/config"
-	"cloud-sprint/internal/api/router"
-	db "cloud-sprint/internal/db/sqlc"
+	"cloud-sprint/internal/api/server"
+	"cloud-sprint/internal/db"
 	"cloud-sprint/internal/logger"
-	"cloud-sprint/internal/token"
-
-	_ "cloud-sprint/docs/swagger"
 )
 
 // @title Go Postgres API
@@ -49,59 +40,22 @@ func main() {
 	}
 	defer log.Sync()
 
-	conn, err := sql.Open(cfg.Database.Driver, cfg.Database.Source)
+	conn, queries, err := db.Connect(cfg.Database, log)
 	if err != nil {
-		log.Fatal("cannot connect to database", zap.Error(err))
+		log.Fatal("failed to connect to database", zap.Error(err))
 	}
 	defer conn.Close()
 
-	err = conn.Ping()
+	app, err := server.New(queries, cfg, log)
 	if err != nil {
-		log.Fatal("cannot ping database", zap.Error(err))
+		log.Fatal("failed to create server", zap.Error(err))
 	}
-	log.Info("database connected successfully")
-
-	tokenMaker, err := token.NewJWTMaker(cfg.JWT.SecretKey, cfg.JWT.RefreshSecretKey)
-	if err != nil {
-		log.Fatal("cannot create token maker", zap.Error(err))
-	}
-
-	queries := db.New(conn)
-
-	app := fiber.New(fiber.Config{
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			code := fiber.StatusInternalServerError
-			message := "Internal Server Error"
-
-			if e, ok := err.(*fiber.Error); ok {
-				code = e.Code
-				message = e.Message
-			}
-
-			log.Error("error handler caught error",
-				zap.Int("status", code),
-				zap.String("message", message),
-				zap.Error(err),
-			)
-
-			return c.Status(code).JSON(fiber.Map{
-				"error": message,
-			})
-		},
-	})
-
-	app.Use(recover.New())
-	app.Use(cors.New())
-
-	router.SetupRoutes(app, queries, tokenMaker, log, cfg)
-
-	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
 	go func() {
-		if err := app.Listen(fmt.Sprintf(":%s", cfg.Server.Port)); err != nil {
+		if err := app.Start(cfg.Server.Port); err != nil {
 			log.Fatal("error starting server", zap.Error(err))
 		}
 	}()
