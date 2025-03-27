@@ -5,23 +5,19 @@ import (
 	"github.com/google/uuid"
 )
 
-// RequestID adds a unique request ID to each request
 func RequestID() fiber.Handler {
+	const headerRequestID = "X-Request-ID"
+
 	return func(c *fiber.Ctx) error {
-		// Check if request already has an ID
-		requestID := c.Get("X-Request-ID")
+		requestID := c.Get(headerRequestID)
 		if requestID == "" {
-			// Generate a new UUID
 			requestID = uuid.New().String()
-			// Add it to the request header
-			c.Set("X-Request-ID", requestID)
+			c.Set(headerRequestID, requestID)
 		}
 		
-		// Store in locals for easy access
 		c.Locals("requestID", requestID)
 		
-		// Add response header with the same request ID
-		c.Set("X-Request-ID", requestID)
+		c.Set(headerRequestID, requestID)
 		
 		return c.Next()
 	}

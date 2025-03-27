@@ -10,7 +10,9 @@ DATABASE:
 
 JWT:
   SECRET_KEY: "your-super-secret-key-change-this-in-production"
-  TOKEN_DURATION: "24h"
+  TOKEN_DURATION: 1
+  REFRESH_SECRET_KEY: "your-super-secret-refresh-key-change-this-in-production"
+  REFRESH_TOKEN_DURATION: 2
 
 LOG:
   LEVEL: "debug"

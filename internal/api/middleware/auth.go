@@ -8,12 +8,10 @@ import (
 	"cloud-sprint/internal/token"
 )
 
-// AuthMiddleware is a middleware for authenticating users
 type AuthMiddleware struct {
 	tokenMaker token.Maker
 }
 
-// NewAuthMiddleware creates a new auth middleware
 func NewAuthMiddleware(tokenMaker token.Maker) fiber.Handler {
 	middleware := &AuthMiddleware{
 		tokenMaker: tokenMaker,
@@ -22,7 +20,6 @@ func NewAuthMiddleware(tokenMaker token.Maker) fiber.Handler {
 	return middleware.Handle
 }
 
-// Handle is the middleware handler
 func (middleware *AuthMiddleware) Handle(c *fiber.Ctx) error {
 	authHeader := c.Get("Authorization")
 	if len(authHeader) == 0 {
@@ -48,7 +45,6 @@ func (middleware *AuthMiddleware) Handle(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnauthorized, "invalid token")
 	}
 
-	// Store user info in context
 	c.Locals("userID", payload.UserID)
 	c.Locals("username", payload.Username)
 

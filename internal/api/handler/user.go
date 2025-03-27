@@ -12,7 +12,6 @@ import (
 	"cloud-sprint/pkg/util"
 )
 
-// UserHandler handles user-related requests
 type UserHandler struct {
 	store db.Querier
 }
@@ -68,7 +67,6 @@ func (h *UserHandler) GetCurrentUser(c *fiber.Ctx) error {
 func (h *UserHandler) GetUser(c *fiber.Ctx) error {
 	id := c.Params("id")
 
-	// Parse user ID
 	parsedID, err := uuid.Parse(id)
 	if err != nil {
 		return response.BadRequest(c, "Invalid user ID", nil)
@@ -143,7 +141,6 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 		return response.Unauthorized(c, "Unauthorized")
 	}
 
-	// Parse user ID
 	parsedID, err := uuid.Parse(id)
 	if err != nil {
 		return response.BadRequest(c, "Invalid user ID", nil)
@@ -152,23 +149,19 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 		return response.BadRequest(c, "Cannot update other users", nil)
 	}
 
-	// Parse request body
 	var req request.UpdateUserRequest
 	if err := c.BodyParser(&req); err != nil {
 		return response.BadRequest(c, "Invalid request body", nil)
 	}
 
-	// Validate request
 	if err := req.Validate(); err != nil {
 		return response.BadRequest(c, err.Error(), nil)
 	}
 
-	// Create update params
 	params := db.UpdateUserParams{
 		ID: parsedID,
 	}
 
-	// Set optional fields
 	if req.Username != nil {
 		params.Username = sql.NullString{
 			String: *req.Username,
@@ -202,7 +195,6 @@ func (h *UserHandler) UpdateUser(c *fiber.Ctx) error {
 		}
 	}
 
-	// Update user
 	user, err := h.store.UpdateUser(c.Context(), params)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -236,7 +228,6 @@ func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 		return response.Unauthorized(c, "Unauthorized")
 	}
 
-	// Only allow users to delete their own profile
 	parsedID, err := uuid.Parse(id)
 	if err != nil {
 		return response.BadRequest(c, "Invalid user ID", nil)
@@ -245,7 +236,6 @@ func (h *UserHandler) DeleteUser(c *fiber.Ctx) error {
 		return response.BadRequest(c, "Cannot delete other users", nil)
 	}
 
-	// Delete user
 	err = h.store.DeleteUser(c.Context(), parsedID)
 	if err != nil {
 		return response.InternalServerError(c, "Failed to delete user")

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,7 +16,6 @@ import (
 	"cloud-sprint/pkg/util"
 )
 
-// AuthHandler handles authentication requests
 type AuthHandler struct {
 	store      db.Querier
 	tokenMaker token.Maker
@@ -115,16 +115,15 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		return response.InternalServerError(c, "Failed to create access token")
 	}
 
-	refreshToken, _, err := h.tokenMaker.CreateToken(
+	refreshToken, _, err := h.tokenMaker.CreateRefreshToken(
 		user.ID,
 		user.Username,
-		h.config.JWT.TokenDuration*24, // Refresh token lasts 24 times longer
+		h.config.JWT.TokenDuration*24,
 	)
 	if err != nil {
 		return response.InternalServerError(c, "Failed to create refresh token")
 	}
 
-	// Create session
 	session, err := h.store.CreateSession(c.Context(), db.CreateSessionParams{
 		ID:           uuid.New(),
 		UserID:       user.ID,
@@ -158,18 +157,15 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return response.BadRequest(c, "Invalid request body", nil)
 	}
-
 	if err := req.Validate(); err != nil {
 		return response.BadRequest(c, err.Error(), nil)
 	}
 
-	// Verify the refresh token
-	refreshPayload, err := h.tokenMaker.VerifyToken(req.RefreshToken)
+	refreshPayload, err := h.tokenMaker.VerifyRefreshToken(req.RefreshToken)
 	if err != nil {
 		return response.Unauthorized(c, "Invalid refresh token")
 	}
 
-	// Check if the session exists
 	sessionID, err := uuid.Parse(req.SessionID)
 	if err != nil {
 		return response.BadRequest(c, "Invalid session ID", nil)
@@ -183,31 +179,26 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 		return response.InternalServerError(c, "Failed to get session")
 	}
 
-	// Check if session is blocked
 	if session.IsBlocked {
 		return response.Unauthorized(c, "Session is blocked")
 	}
 
-	// Check if session is expired
 	if time.Now().After(session.ExpiresAt) {
 		return response.Unauthorized(c, "Session expired")
 	}
 
-	// Check if the refresh token matches
 	if session.RefreshToken != req.RefreshToken {
 		return response.Unauthorized(c, "Refresh token doesn't match")
 	}
 
-	// Check if the user ID matches
 	refreshUserID, err := uuid.Parse(refreshPayload.UserID)
 	if err != nil {
-		return response.InternalServerError(c, "Failed to parse user ID")
+		return response.BadRequest(c, "Invalid user ID in refresh token", nil)
 	}
 	if session.UserID != refreshUserID {
 		return response.Unauthorized(c, "User ID doesn't match")
 	}
 
-	// Get the user
 	user, err := h.store.GetUserByID(c.Context(), session.UserID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -216,7 +207,6 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 		return response.InternalServerError(c, "Failed to get user")
 	}
 
-	// Create new access token
 	accessToken, _, err := h.tokenMaker.CreateToken(
 		user.ID,
 		user.Username,
@@ -226,8 +216,29 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 		return response.InternalServerError(c, "Failed to create access token")
 	}
 
+	refreshToken, refreshTokenPayload, err := h.tokenMaker.CreateRefreshToken(
+		user.ID,
+		user.Username,
+		h.config.JWT.RefreshDuration,
+	)
+	if err != nil {
+		return response.InternalServerError(c, "Failed to create refresh token")
+	}
+
+	updatedSession, err := h.store.UpdateSessionRefreshToken(c.Context(), db.UpdateSessionRefreshTokenParams{
+		ID:           sessionID,
+		RefreshToken: refreshToken,
+		ExpiresAt:    refreshTokenPayload.ExpiredAt,
+	})
+	if err != nil {
+		fmt.Println("Error updating session:", err)
+		return response.InternalServerError(c, "Failed to refresh token")
+	}
+	fmt.Println("Session updated successfully:", updatedSession.ID)
+
 	refreshResponse := response.RefreshTokenResponse{
-		AccessToken: accessToken,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}
 	return response.Success(c, refreshResponse, "Token refreshed successfully")
 }
