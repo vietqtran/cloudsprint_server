@@ -90,17 +90,11 @@ func getEnv(key, defaultValue string) string {
 
 func parseDuration(key string) (time.Duration, error) {
 	durationStr := os.Getenv(key)
-	if durationStr == "" {
-		// Default to 15 minutes if not specified
-		return 15 * time.Minute, nil
-	}
 
-	// Check if the duration is in hours format
 	if hours, err := strconv.Atoi(durationStr); err == nil {
 		return time.Duration(hours) * time.Hour, nil
 	}
 
-	// Otherwise try to parse as a duration string
 	duration, err := time.ParseDuration(durationStr)
 	if err != nil {
 		return 0, fmt.Errorf("invalid duration for %s: %w", key, err)

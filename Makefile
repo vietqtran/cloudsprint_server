@@ -2,7 +2,7 @@
 
 # Project variables
 BINARY_NAME=cloudsprint_server
-DB_URL=postgresql://postgres:password@localhost:5432/postgres?sslmode=disable
+DB_URL=postgresql://neondb_owner:J1Kmrk5PNRqg@ep-white-tooth-a1uuj3k9.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
 MIGRATION_URL=file://db/migration
 
 all: clean sqlc swag build

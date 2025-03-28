@@ -43,9 +43,6 @@ func NewAuthHandler(store db.Querier, tokenMaker token.Maker, config config.Conf
 // @Accept json
 // @Produce json
 // @Param request body request.RegisterRequest true "Register request"
-// @Success 201 {object} response.UserResponse
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
 // @Router /auth/register [post]
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	var req request.RegisterRequest
@@ -91,9 +88,6 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 // @Produce json
 // @Param request body request.LoginRequest true "Login request"
 // @Success 200 {object} response.LoginResponse
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 401 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
 // @Router /auth/login [post]
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	var req request.LoginRequest
@@ -142,7 +136,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		RefreshToken: refreshToken,
 		UserAgent:    c.Get("User-Agent"),
 		ClientIp:     c.IP(),
-		ExpiresAt:    accessPayload.ExpiredAt.Add(time.Hour * h.config.JWT.TokenDuration),
+		ExpiresAt:    accessPayload.ExpiredAt.Add(h.config.JWT.TokenDuration),
 	})
 	if err != nil {
 		return response.InternalServerError(c, "Failed to create session", err)
@@ -178,9 +172,6 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 // @Produce json
 // @Param request body request.RefreshTokenRequest true "Refresh token request"
 // @Success 200 {object} response.RefreshTokenResponse
-// @Failure 400 {object} response.ErrorResponse
-// @Failure 401 {object} response.ErrorResponse
-// @Failure 500 {object} response.ErrorResponse
 // @Router /auth/refresh [post]
 func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 	var req request.RefreshTokenRequest
