@@ -52,7 +52,7 @@ postgres:
 	docker stop postgres
 	docker rm postgres
 	docker run --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres:14-alpine
-	@sleep 3
+	@sleep 10
 
 createdb:
 	@echo "Creating database..."

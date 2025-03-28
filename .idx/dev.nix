@@ -9,6 +9,10 @@
     pkgs.air
     pkgs.sqlc
     pkgs.gnumake42
+    pkgs.go-swag
+    pkgs.go-swagger
+    pkgs.docker-compose
+    pkgs.go-migrate
   ];
   # Sets environment variables in the workspace
   env = {};
