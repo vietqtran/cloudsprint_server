@@ -15,7 +15,7 @@ func SetupRoutes(app *fiber.App, store db.Querier, tokenMaker token.Maker, logge
 	errorMiddleware := middleware.NewErrorHandler(logger)
 	requestIDMiddleware := middleware.RequestID()
 
-	app.Use(middleware.CORSSimple())
+	app.Use(middleware.CORS())
 	app.Use(requestIDMiddleware)
 	app.Use(loggerMiddleware)
 	app.Use(errorMiddleware)
@@ -23,5 +23,4 @@ func SetupRoutes(app *fiber.App, store db.Querier, tokenMaker token.Maker, logge
 	api := app.Group("/api/v1")
 
 	SetupAuthRoutes(api, store, tokenMaker, logger, config)
-	SetupUserRoutes(api, store, tokenMaker, logger)
 }

@@ -1,6 +1,7 @@
 package token
 
 import (
+	"cloud-sprint/internal/constants"
 	"errors"
 	"fmt"
 	"time"
@@ -15,21 +16,17 @@ var (
 )
 
 type Payload struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"user_id"`
-	Username  string    `json:"username"`
-	IssuedAt  time.Time `json:"issued_at"`
-	ExpiredAt time.Time `json:"expired_at"`
-	TokenType string    `json:"token_type"` 
+	UserID    string              `json:"user_id"`
+	Email     string              `json:"email"`
+	IssuedAt  time.Time           `json:"issued_at"`
+	ExpiredAt time.Time           `json:"expired_at"`
+	TokenType constants.TokenType `json:"token_type"`
 }
 
-func NewPayload(userID uuid.UUID, username string, duration time.Duration, tokenType string) (*Payload, error) {
-	tokenID := fmt.Sprintf("%d_%s_%d", userID, username, time.Now().UnixNano())
-
+func NewPayload(userID uuid.UUID, email string, duration time.Duration, tokenType constants.TokenType) (*Payload, error) {
 	payload := &Payload{
-		ID:        tokenID,
 		UserID:    userID.String(),
-		Username:  username,
+		Email:     email,
 		IssuedAt:  time.Now(),
 		ExpiredAt: time.Now().Add(time.Hour * duration),
 		TokenType: tokenType,
@@ -45,9 +42,9 @@ func (payload *Payload) Valid() error {
 }
 
 type Maker interface {
-	CreateToken(userID uuid.UUID, username string, duration time.Duration) (string, *Payload, error)
+	CreateToken(userID uuid.UUID, email string, duration time.Duration) (string, *Payload, error)
 	VerifyToken(token string) (*Payload, error)
-	CreateRefreshToken(userID uuid.UUID, username string, duration time.Duration) (string, *Payload, error)
+	CreateRefreshToken(userID uuid.UUID, email string, duration time.Duration) (string, *Payload, error)
 	VerifyRefreshToken(refreshToken string) (*Payload, error)
 }
 
@@ -60,19 +57,19 @@ func NewJWTMaker(accessTokenSecretKey, refreshTokenSecretKey string) (Maker, err
 	if len(accessTokenSecretKey) < 32 {
 		return nil, fmt.Errorf("invalid access token key size: must be at least 32 characters")
 	}
-	
+
 	if len(refreshTokenSecretKey) < 32 {
 		return nil, fmt.Errorf("invalid refresh token key size: must be at least 32 characters")
 	}
-	
+
 	return &JWTMaker{
 		accessTokenSecretKey:  accessTokenSecretKey,
 		refreshTokenSecretKey: refreshTokenSecretKey,
 	}, nil
 }
 
-func (maker *JWTMaker) CreateToken(userID uuid.UUID, username string, duration time.Duration) (string, *Payload, error) {
-	payload, err := NewPayload(userID, username, duration, "access")
+func (maker *JWTMaker) CreateToken(userID uuid.UUID, email string, duration time.Duration) (string, *Payload, error) {
+	payload, err := NewPayload(userID, email, duration, constants.AccessTokenType)
 	if err != nil {
 		return "", nil, err
 	}
@@ -86,8 +83,8 @@ func (maker *JWTMaker) VerifyToken(token string) (*Payload, error) {
 	return maker.verifyTokenWithSecret(token, maker.accessTokenSecretKey)
 }
 
-func (maker *JWTMaker) CreateRefreshToken(userID uuid.UUID, username string, duration time.Duration) (string, *Payload, error) {
-	payload, err := NewPayload(userID, username, duration, "refresh")
+func (maker *JWTMaker) CreateRefreshToken(userID uuid.UUID, email string, duration time.Duration) (string, *Payload, error) {
+	payload, err := NewPayload(userID, email, duration, constants.RefreshTokenType)
 	if err != nil {
 		return "", nil, err
 	}
@@ -102,11 +99,11 @@ func (maker *JWTMaker) VerifyRefreshToken(refreshToken string) (*Payload, error)
 	if err != nil {
 		return nil, err
 	}
-	
-	if payload.TokenType != "refresh" {
+
+	if payload.TokenType != constants.RefreshTokenType {
 		return nil, ErrInvalidToken
 	}
-	
+
 	return payload, nil
 }
 

@@ -9,22 +9,24 @@ import (
 )
 
 type UserResponse struct {
-	ID        uuid.UUID     `json:"id"`
-	Username  string    		`json:"username"`
-	Email     string    		`json:"email"`
-	FullName  string    		`json:"full_name"`
-	CreatedAt time.Time 		`json:"created_at"`
-	UpdatedAt time.Time 		`json:"updated_at"`
+	ID         uuid.UUID `json:"id"`
+	Email      string    `json:"email"`
+	FirstName  string    `json:"first_name"`
+	LastName   string    `json:"last_name"`
+	Status     int       `json:"status"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 func NewUserResponse(user db.User) UserResponse {
 	return UserResponse{
-		ID:        user.ID,
-		Username:  user.Username,
-		Email:     user.Email,
-		FullName:  user.FullName,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		ID:         user.ID,
+		Email:      user.Email,
+		FirstName:  user.FirstName,
+		LastName:   user.LastName,
+		Status:     int(user.Status),
+		CreatedAt:  user.CreatedAt,
+		UpdatedAt:  user.UpdatedAt,
 	}
 }
 
@@ -45,10 +47,6 @@ func NewLoginResponse(user db.User, accessToken, refreshToken, sessionID string)
 }
 
 type RefreshTokenResponse struct {
-	AccessToken string `json:"access_token"`
+	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
-}
-
-type ErrorResponse struct {
-	Error string `json:"error"`
 }

@@ -1,7 +1,7 @@
 -- name: CreateSession :one
 INSERT INTO sessions (
   id,
-  user_id,
+  account_id,
   refresh_token,
   user_agent,
   client_ip,
@@ -16,7 +16,7 @@ WHERE id = $1 LIMIT 1;
 
 -- name: ListSessions :many
 SELECT * FROM sessions
-WHERE user_id = $1
+WHERE account_id = $1
 ORDER BY created_at DESC;
 
 -- name: UpdateSessionRefreshToken :one

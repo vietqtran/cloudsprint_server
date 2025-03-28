@@ -1,8 +1,6 @@
 package middleware
 
 import (
-	"strings"
-
 	"github.com/gofiber/fiber/v2"
 
 	"cloud-sprint/internal/token"
@@ -10,33 +8,28 @@ import (
 
 type AuthMiddleware struct {
 	tokenMaker token.Maker
+	cookieName string
 }
 
-func NewAuthMiddleware(tokenMaker token.Maker) fiber.Handler {
+func NewAuthMiddleware(tokenMaker token.Maker, cookieName string) fiber.Handler {
+	if cookieName == "" {
+		cookieName = "Authorization"
+	}
+
 	middleware := &AuthMiddleware{
 		tokenMaker: tokenMaker,
+		cookieName: cookieName,
 	}
 
 	return middleware.Handle
 }
 
 func (middleware *AuthMiddleware) Handle(c *fiber.Ctx) error {
-	authHeader := c.Get("Authorization")
-	if len(authHeader) == 0 {
-		return fiber.NewError(fiber.StatusUnauthorized, "authorization header is required")
+	accessToken := c.Cookies(middleware.cookieName)
+	if accessToken == "" {
+		return fiber.NewError(fiber.StatusUnauthorized, "authentication cookie is missing")
 	}
 
-	fields := strings.Fields(authHeader)
-	if len(fields) < 2 {
-		return fiber.NewError(fiber.StatusUnauthorized, "invalid authorization header format")
-	}
-
-	authType := strings.ToLower(fields[0])
-	if authType != "bearer" {
-		return fiber.NewError(fiber.StatusUnauthorized, "unsupported authorization type")
-	}
-
-	accessToken := fields[1]
 	payload, err := middleware.tokenMaker.VerifyToken(accessToken)
 	if err != nil {
 		if err == token.ErrExpiredToken {
@@ -45,8 +38,8 @@ func (middleware *AuthMiddleware) Handle(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusUnauthorized, "invalid token")
 	}
 
-	c.Locals("userID", payload.UserID)
-	c.Locals("username", payload.Username)
+	c.Locals("current_user_id", payload.UserID)
+	c.Locals("current_user_email", payload.Email)
 
 	return c.Next()
 }

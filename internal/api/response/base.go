@@ -1,129 +1,72 @@
 package response
 
 import (
+	"cloud-sprint/internal/constants"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
 
-// BaseResponse is the standard response format for the API
 type BaseResponse struct {
-	Status     string      `json:"status"`     // "success" or "error"
-	Message    string      `json:"message"`    // A human-readable message
-	Data       interface{} `json:"data"`       // The actual response data, can be null for error responses
-	Error      interface{} `json:"error"`      // Error details, null for success responses
-	Pagination *Pagination `json:"pagination"` // Pagination info, null for non-paginated responses
-	Timestamp  time.Time   `json:"timestamp"`  // When the response was generated
-	RequestID  string      `json:"request_id"` // Unique identifier for the request
+	Status     string                   `json:"status"`
+	Message    string                   `json:"message"`
+	Code       constants.HttpStatusCode `json:"code"`
+	Data       interface{}              `json:"data"`
+	Pagination *Pagination              `json:"pagination,omitempty"`
+	Timestamp  time.Time                `json:"timestamp"`
+	RequestID  string                   `json:"request_id,omitempty"`
+	Trace      error                    `json:"-"`
 }
 
-// Pagination contains pagination metadata
 type Pagination struct {
-	Total   int64 `json:"total"`    // Total number of records
-	Page    int   `json:"page"`     // Current page number
-	PerPage int   `json:"per_page"` // Number of records per page
-	Pages   int   `json:"pages"`    // Total number of pages
+	Total   int64 `json:"total"`
+	Page    int   `json:"page"`
+	PerPage int   `json:"per_page"`
+	Pages   int   `json:"pages"`
 }
 
-// ErrorDetail contains detailed error information
-type ErrorDetail struct {
-	Code    string      `json:"code"`              // Machine-readable error code
-	Message string      `json:"message"`           // Human-readable error message
-	Details interface{} `json:"details,omitempty"` // Additional error details
+func (r *BaseResponse) Send(c *fiber.Ctx) error {
+	statusCode := int(r.Code)
+	return c.Status(statusCode).JSON(r)
 }
 
-// NewSuccessResponse creates a new success response
-func NewSuccessResponse(ctx *fiber.Ctx, data interface{}, message string) *BaseResponse {
+func NewSuccessResponse(c *fiber.Ctx, code constants.HttpStatusCode, data interface{}, message string) *BaseResponse {
 	return &BaseResponse{
 		Status:     "success",
 		Message:    message,
+		Code:       code,
 		Data:       data,
-		Error:      nil,
 		Pagination: nil,
 		Timestamp:  time.Now(),
-		RequestID:  ctx.GetRespHeader("X-Request-ID", ""),
+		RequestID:  c.GetRespHeader("X-Request-ID", ""),
 	}
 }
 
-// NewErrorResponse creates a new error response
-func NewErrorResponse(ctx *fiber.Ctx, err ErrorDetail, message string) *BaseResponse {
+func NewErrorResponse(c *fiber.Ctx, code constants.HttpStatusCode, message string, trace error) *BaseResponse {
 	return &BaseResponse{
-		Status:     "error",
-		Message:    message,
-		Data:       nil,
-		Error:      err,
-		Pagination: nil,
-		Timestamp:  time.Now(),
-		RequestID:  ctx.GetRespHeader("X-Request-ID", ""),
+		Status:    "error",
+		Code:      code,
+		Message:   message,
+		Data:      nil,
+		Timestamp: time.Now(),
+		RequestID: c.GetRespHeader("X-Request-ID", ""),
+		Trace:     trace,
 	}
 }
 
-// NewPaginatedResponse creates a new paginated success response
-func NewPaginatedResponse(ctx *fiber.Ctx, data interface{}, pagination *Pagination, message string) *BaseResponse {
+func NewPaginatedResponse(c *fiber.Ctx, code constants.HttpStatusCode, data interface{}, pagination *Pagination, message string) *BaseResponse {
 	return &BaseResponse{
 		Status:     "success",
 		Message:    message,
+		Code:       code,
 		Data:       data,
-		Error:      nil,
 		Pagination: pagination,
 		Timestamp:  time.Now(),
-		RequestID:  ctx.GetRespHeader("X-Request-ID", ""),
+		RequestID:  c.GetRespHeader("X-Request-ID", ""),
 	}
 }
 
-// Success is a helper function to send a success response
-func Success(ctx *fiber.Ctx, data interface{}, message string) error {
-	return ctx.Status(fiber.StatusOK).JSON(NewSuccessResponse(ctx, data, message))
-}
-
-// Created is a helper function to send a 201 Created response
-func Created(ctx *fiber.Ctx, data interface{}, message string) error {
-	return ctx.Status(fiber.StatusCreated).JSON(NewSuccessResponse(ctx, data, message))
-}
-
-// NoContent is a helper function to send a 204 No Content response
-func NoContent(ctx *fiber.Ctx) error {
-	return ctx.SendStatus(fiber.StatusNoContent)
-}
-
-// Error is a helper function to send an error response
-func Error(ctx *fiber.Ctx, statusCode int, errorCode string, errorMessage string, details interface{}) error {
-	err := ErrorDetail{
-		Code:    errorCode,
-		Message: errorMessage,
-		Details: details,
-	}
-
-	return ctx.Status(statusCode).JSON(NewErrorResponse(ctx, err, errorMessage))
-}
-
-// BadRequest is a helper function to send a 400 Bad Request response
-func BadRequest(ctx *fiber.Ctx, errorMessage string, details interface{}) error {
-	return Error(ctx, fiber.StatusBadRequest, "BAD_REQUEST", errorMessage, details)
-}
-
-// Unauthorized is a helper function to send a 401 Unauthorized response
-func Unauthorized(ctx *fiber.Ctx, errorMessage string) error {
-	return Error(ctx, fiber.StatusUnauthorized, "UNAUTHORIZED", errorMessage, nil)
-}
-
-// Forbidden is a helper function to send a 403 Forbidden response
-func Forbidden(ctx *fiber.Ctx, errorMessage string) error {
-	return Error(ctx, fiber.StatusForbidden, "FORBIDDEN", errorMessage, nil)
-}
-
-// NotFound is a helper function to send a 404 Not Found response
-func NotFound(ctx *fiber.Ctx, errorMessage string) error {
-	return Error(ctx, fiber.StatusNotFound, "NOT_FOUND", errorMessage, nil)
-}
-
-// InternalServerError is a helper function to send a 500 Internal Server Error response
-func InternalServerError(ctx *fiber.Ctx, errorMessage string) error {
-	return Error(ctx, fiber.StatusInternalServerError, "INTERNAL_SERVER_ERROR", errorMessage, nil)
-}
-
-// WithPagination is a helper function to send a paginated success response
-func WithPagination(ctx *fiber.Ctx, data interface{}, total int64, page, perPage int, message string) error {
+func WithPagination(c *fiber.Ctx, data interface{}, total int64, page, perPage int, message string) error {
 	pages := int(total) / perPage
 	if int(total)%perPage > 0 {
 		pages++
@@ -136,5 +79,33 @@ func WithPagination(ctx *fiber.Ctx, data interface{}, total int64, page, perPage
 		Pages:   pages,
 	}
 
-	return ctx.Status(fiber.StatusOK).JSON(NewPaginatedResponse(ctx, data, pagination, message))
+	return NewPaginatedResponse(c, constants.StatusOK, data, pagination, message).Send(c)
+}
+
+func Success(c *fiber.Ctx, data interface{}, message string) error {
+	return NewSuccessResponse(c, constants.StatusOK, data, message).Send(c)
+}
+
+func Created(c *fiber.Ctx, data interface{}, message string) error {
+	return NewSuccessResponse(c, constants.StatusCreated, data, message).Send(c)
+}
+
+func BadRequest(c *fiber.Ctx, message string, err error) error {
+	return NewErrorResponse(c, constants.StatusBadRequest, message, err).Send(c)
+}
+
+func Unauthorized(c *fiber.Ctx, message string) error {
+	return NewErrorResponse(c, constants.StatusUnauthorized, message, nil).Send(c)
+}
+
+func Forbidden(c *fiber.Ctx, message string) error {
+	return NewErrorResponse(c, constants.StatusForbidden, message, nil).Send(c)
+}
+
+func NotFound(c *fiber.Ctx, message string) error {
+	return NewErrorResponse(c, constants.StatusNotFound, message, nil).Send(c)
+}
+
+func InternalServerError(c *fiber.Ctx, message string, trace error) error {
+	return NewErrorResponse(c, constants.StatusInternalServerError, message, trace).Send(c)
 }

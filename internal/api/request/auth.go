@@ -2,26 +2,25 @@ package request
 
 import (
 	"errors"
-	"fmt"
 	"net/mail"
 	"strings"
 )
 
 type RegisterRequest struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	FullName string `json:"full_name"`
+	Email      string `json:"email"`
+	Password   string `json:"password"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
 }
 
 // Validate validates the register request
 func (r *RegisterRequest) Validate() error {
-	if len(r.Username) < 3 {
-		return errors.New("username must be at least 3 characters long")
+	if strings.Contains(r.FirstName, " ") {
+		return errors.New("first name cannot contain spaces")
 	}
 
-	if strings.Contains(r.Username, " ") {
-		return errors.New("username cannot contain spaces")
+	if strings.Contains(r.LastName, " ") {
+		return errors.New("last name cannot contain spaces")
 	}
 
 	if _, err := mail.ParseAddress(r.Email); err != nil {
@@ -32,21 +31,17 @@ func (r *RegisterRequest) Validate() error {
 		return errors.New("password must be at least 6 characters long")
 	}
 
-	if len(r.FullName) < 2 {
-		return errors.New("full name must be at least 2 characters long")
-	}
-
 	return nil
 }
 
 type LoginRequest struct {
-	Username string `json:"username"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
 func (r *LoginRequest) Validate() error {
-	if r.Username == "" {
-		return errors.New("username is required")
+	if r.Email == "" {
+		return errors.New("email is required")
 	}
 
 	if r.Password == "" {
@@ -74,42 +69,23 @@ func (r *RefreshTokenRequest) Validate() error {
 }
 
 type UpdateUserRequest struct {
-	Username *string `json:"username,omitempty"`
-	Email    *string `json:"email,omitempty"`
-	Password *string `json:"password,omitempty"`
-	FullName *string `json:"full_name,omitempty"`
+	Email      *string `json:"email,omitempty"`
+	FirstName  *string `json:"first_name,omitempty"`
+	LastName   *string `json:"last_name,omitempty"`
 }
 
 func (r *UpdateUserRequest) Validate() error {
-	if r.Username == nil && r.Email == nil && r.Password == nil && r.FullName == nil {
-		return errors.New("at least one field must be provided")
+	if strings.Contains(*r.FirstName, " ") {
+		return errors.New("first name cannot contain spaces")
 	}
 
-	if r.Username != nil {
-		if len(*r.Username) < 3 {
-			return errors.New("username must be at least 3 characters long")
-		}
-
-		if strings.Contains(*r.Username, " ") {
-			return errors.New("username cannot contain spaces")
-		}
+	if strings.Contains(*r.LastName, " ") {
+		return errors.New("last name cannot contain spaces")
 	}
 
 	if r.Email != nil {
 		if _, err := mail.ParseAddress(*r.Email); err != nil {
 			return errors.New("invalid email address")
-		}
-	}
-
-	if r.Password != nil {
-		if len(*r.Password) < 6 {
-			return fmt.Errorf("password must be at least 6 characters long")
-		}
-	}
-
-	if r.FullName != nil {
-		if len(*r.FullName) < 2 {
-			return errors.New("full name must be at least 2 characters long")
 		}
 	}
 
