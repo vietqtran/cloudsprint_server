@@ -29,7 +29,7 @@ import (
 // @in header
 // @name Authorization
 func main() {
-	cfg, err := config.LoadConfig("config")
+	cfg, err := config.LoadConfig()
 	if err != nil {
 		panic(fmt.Errorf("failed to load configuration: %w", err))
 	}

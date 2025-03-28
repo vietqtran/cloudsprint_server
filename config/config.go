@@ -1,53 +1,110 @@
 package config
 
 import (
+	"fmt"
+	"os"
+	"strconv"
 	"time"
 
-	"github.com/spf13/viper"
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	Environment string        `mapstructure:"ENVIRONMENT"`
-	Server      ServerConfig  `mapstructure:"SERVER"`
-	Database    DBConfig      `mapstructure:"DATABASE"`
-	JWT         JWTConfig     `mapstructure:"JWT"`
-	Log         LogConfig     `mapstructure:"LOG"`
+	Environment string        
+	Server      ServerConfig  
+	Database    DBConfig      
+	JWT         JWTConfig     
+	Log         LogConfig     
 }
 
 type ServerConfig struct {
-	Port string `mapstructure:"PORT"`
+	Port string
 }
 
 type DBConfig struct {
-	Driver   string `mapstructure:"DRIVER"`
-	Source   string `mapstructure:"SOURCE"`
-	MigrationURL string `mapstructure:"MIGRATION_URL"`
+	Driver       string
+	Source       string
+	MigrationURL string
 }
 
 type JWTConfig struct {
-	SecretKey     string        `mapstructure:"SECRET_KEY"`
-	TokenDuration time.Duration `mapstructure:"TOKEN_DURATION"`
-	RefreshSecretKey string        `mapstructure:"REFRESH_SECRET_KEY"`
-	RefreshDuration time.Duration `mapstructure:"REFRESH_TOKEN_DURATION"`
+	SecretKey        string
+	TokenDuration    time.Duration
+	RefreshSecretKey string
+	RefreshDuration  time.Duration
 }
 
 type LogConfig struct {
-	Level string `mapstructure:"LEVEL"`
-	Path  string `mapstructure:"PATH"`
+	Level string
+	Path  string
 }
 
-func LoadConfig(path string) (config Config, err error) {
-	viper.AddConfigPath(path)
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-
-	viper.AutomaticEnv()
-
-	err = viper.ReadInConfig()
+func LoadConfig() (Config, error) {
+	err := godotenv.Load()
 	if err != nil {
-		return
+		return Config{}, fmt.Errorf("error loading .env file: %w", err)
 	}
 
-	err = viper.Unmarshal(&config)
-	return
+	tokenDuration, err := parseDuration("JWT_TOKEN_DURATION")
+	if err != nil {
+		return Config{}, err
+	}
+
+	refreshDuration, err := parseDuration("JWT_REFRESH_TOKEN_DURATION")
+	if err != nil {
+		return Config{}, err
+	}
+
+	config := Config{
+		Environment: getEnv("ENVIRONMENT", "development"),
+		Server: ServerConfig{
+			Port: getEnv("SERVER_PORT", "8080"),
+		},
+		Database: DBConfig{
+			Driver:       getEnv("DB_DRIVER", "postgres"),
+			Source:       getEnv("DB_SOURCE", ""),
+			MigrationURL: getEnv("DB_MIGRATION_URL", "file://db/migration"),
+		},
+		JWT: JWTConfig{
+			SecretKey:        getEnv("JWT_SECRET_KEY", ""),
+			TokenDuration:    tokenDuration,
+			RefreshSecretKey: getEnv("JWT_REFRESH_SECRET_KEY", ""),
+			RefreshDuration:  refreshDuration,
+		},
+		Log: LogConfig{
+			Level: getEnv("LOG_LEVEL", "info"),
+			Path:  getEnv("LOG_PATH", "logs"),
+		},
+	}
+
+	return config, nil
+}
+
+func getEnv(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
+}
+
+func parseDuration(key string) (time.Duration, error) {
+	durationStr := os.Getenv(key)
+	if durationStr == "" {
+		// Default to 15 minutes if not specified
+		return 15 * time.Minute, nil
+	}
+
+	// Check if the duration is in hours format
+	if hours, err := strconv.Atoi(durationStr); err == nil {
+		return time.Duration(hours) * time.Hour, nil
+	}
+
+	// Otherwise try to parse as a duration string
+	duration, err := time.ParseDuration(durationStr)
+	if err != nil {
+		return 0, fmt.Errorf("invalid duration for %s: %w", key, err)
+	}
+
+	return duration, nil
 }
