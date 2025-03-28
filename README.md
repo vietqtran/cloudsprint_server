@@ -26,7 +26,7 @@ A production-ready RESTful API built with Go, Fiber, PostgreSQL, sqlc, and JWT a
 ## Project Structure
 
 ```
-go-postgres-api/
+cloudsprint_server/
 ├── cmd/
 │   └── api/
 │       └── main.go
@@ -76,7 +76,7 @@ go-postgres-api/
 
 ```bash
 git clone https://cloud-sprint.git
-cd go-postgres-api
+cd cloudsprint_server
 ```
 
 2. Start a PostgreSQL instance:
@@ -121,7 +121,7 @@ make run
 
 ```bash
 git clone https://cloud-sprint.git
-cd go-postgres-api
+cd cloudsprint_server
 ```
 
 2. Build and run with Docker:
