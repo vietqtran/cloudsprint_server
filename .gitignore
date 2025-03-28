@@ -15,9 +15,6 @@ cloudsprint_server
 # Dependency directories (remove the comment below to include it)
 vendor/
 
-# Generated files
-/internal/db/sqlc/
-
 # Go workspace file
 go.work
 
