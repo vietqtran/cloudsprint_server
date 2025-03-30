@@ -23,6 +23,15 @@ ORDER BY created_at DESC;
 UPDATE sessions
 SET
   refresh_token = $2,
-  expires_at = $3
+  expires_at = $3,
+  updated_at = now()
 WHERE id = $1
 RETURNING *;
+
+-- name: DeleteExpiredSessions :exec
+DELETE FROM sessions
+WHERE expires_at < now();
+
+-- name: DeleteSession :exec
+DELETE FROM sessions
+WHERE id = $1;

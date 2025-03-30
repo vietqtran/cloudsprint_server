@@ -27,7 +27,6 @@ SET
   email = COALESCE(sqlc.narg(email), email),
   first_name = COALESCE(sqlc.narg(first_name), first_name),
   last_name = COALESCE(sqlc.narg(last_name), last_name),
-  status = COALESCE(sqlc.narg(status), status),
   updated_at = now()
 WHERE id = sqlc.arg(id)
 RETURNING *;

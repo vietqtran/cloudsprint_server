@@ -23,10 +23,14 @@ WHERE user_id = $1 LIMIT 1;
 UPDATE accounts
 SET
     hashed_password = COALESCE(sqlc.narg(hashed_password), hashed_password),
-    status = COALESCE(sqlc.narg(status), status)
+    status = COALESCE(sqlc.narg(status), status),
+    updated_at = now()
 WHERE id = sqlc.arg(id)
 RETURNING *;
 
 -- name: DeleteAccount :exec
-DELETE FROM accounts
-WHERE id = $1;
+WITH account_user AS (
+  SELECT user_id FROM accounts WHERE accounts.id = $1
+)
+DELETE FROM users
+WHERE users.id = (SELECT user_id FROM account_user);

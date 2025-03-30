@@ -14,7 +14,6 @@ type BaseResponse struct {
 	Data       interface{}              `json:"data"`
 	Pagination *Pagination              `json:"pagination,omitempty"`
 	Timestamp  time.Time                `json:"timestamp"`
-	RequestID  string                   `json:"request_id,omitempty"`
 	Trace      error                    `json:"-"`
 }
 
@@ -38,7 +37,6 @@ func NewSuccessResponse(c *fiber.Ctx, code constants.HttpStatusCode, data interf
 		Data:       data,
 		Pagination: nil,
 		Timestamp:  time.Now(),
-		RequestID:  c.GetRespHeader("X-Request-ID", ""),
 	}
 }
 
@@ -49,7 +47,6 @@ func NewErrorResponse(c *fiber.Ctx, code constants.HttpStatusCode, message strin
 		Message:   message,
 		Data:      nil,
 		Timestamp: time.Now(),
-		RequestID: c.GetRespHeader("X-Request-ID", ""),
 		Trace:     trace,
 	}
 }
@@ -62,7 +59,6 @@ func NewPaginatedResponse(c *fiber.Ctx, code constants.HttpStatusCode, data inte
 		Data:       data,
 		Pagination: pagination,
 		Timestamp:  time.Now(),
-		RequestID:  c.GetRespHeader("X-Request-ID", ""),
 	}
 }
 

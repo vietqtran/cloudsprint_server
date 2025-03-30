@@ -24,7 +24,6 @@ func NewUserResponse(user db.User) UserResponse {
 		Email:      user.Email,
 		FirstName:  user.FirstName,
 		LastName:   user.LastName,
-		Status:     int(user.Status),
 		CreatedAt:  user.CreatedAt,
 		UpdatedAt:  user.UpdatedAt,
 	}
