@@ -12,13 +12,9 @@ import (
 
 func SetupRoutes(app *fiber.App, store db.Querier, tokenMaker token.Maker, logger *zap.Logger, config config.Config) {
 	loggerMiddleware := middleware.NewLogger(logger)
-	errorMiddleware := middleware.NewErrorHandler(logger)
-	requestIDMiddleware := middleware.RequestID()
 
 	app.Use(middleware.CORS())
-	app.Use(requestIDMiddleware)
 	app.Use(loggerMiddleware)
-	app.Use(errorMiddleware)
 
 	api := app.Group("/api/v1")
 

@@ -15,7 +15,7 @@ func SetupAuthRoutes(api fiber.Router, store db.Querier, tokenMaker token.Maker,
 	authHandler := handler.NewAuthHandler(store, tokenMaker, config)
 
 	auth := api.Group("/auth")
-	auth.Post("/register", authHandler.Register)
-	auth.Post("/login", authHandler.Login)
+	auth.Post("/sign-up", authHandler.SignUp)
+	auth.Post("/sign-in", authHandler.SignIn)
 	auth.Post("/refresh", authHandler.RefreshToken)
 }

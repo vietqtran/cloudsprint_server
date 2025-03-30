@@ -16,8 +16,8 @@ CREATE TABLE "accounts" (
 CREATE TABLE "users" (
   "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
   "email" varchar UNIQUE NOT NULL,
-  "first_name" varchar NOT NULL,
-  "last_name" varchar NOT NULL,
+  "first_name" varchar NOT NULL CHECK (LENGTH("first_name") > 1) CHECK (LENGTH("first_name") < 256),
+  "last_name" varchar NOT NULL CHECK (LENGTH("last_name") > 1) CHECK (LENGTH("last_name") < 256),
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );

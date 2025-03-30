@@ -6,15 +6,14 @@ import (
 	"strings"
 )
 
-type RegisterRequest struct {
+type SignUpRequest struct {
 	Email      string `json:"email"`
 	Password   string `json:"password"`
-	FirstName  string `json:"first_name"`
-	LastName   string `json:"last_name"`
+	FirstName  string `json:"firstName"`
+	LastName   string `json:"lastName"`
 }
 
-// Validate validates the register request
-func (r *RegisterRequest) Validate() error {
+func (r *SignUpRequest) Validate() error {
 	if strings.Contains(r.FirstName, " ") {
 		return errors.New("first name cannot contain spaces")
 	}
@@ -34,12 +33,12 @@ func (r *RegisterRequest) Validate() error {
 	return nil
 }
 
-type LoginRequest struct {
+type SignInRequest struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-func (r *LoginRequest) Validate() error {
+func (r *SignInRequest) Validate() error {
 	if r.Email == "" {
 		return errors.New("email is required")
 	}
@@ -52,8 +51,8 @@ func (r *LoginRequest) Validate() error {
 }
 
 type RefreshTokenRequest struct {
-	RefreshToken string `json:"refresh_token"`
-	SessionID    string `json:"session_id"`
+	RefreshToken string `json:"refreshToken"`
+	SessionID    string `json:"sessionId"`
 }
 
 func (r *RefreshTokenRequest) Validate() error {
@@ -70,8 +69,8 @@ func (r *RefreshTokenRequest) Validate() error {
 
 type UpdateUserRequest struct {
 	Email      *string `json:"email,omitempty"`
-	FirstName  *string `json:"first_name,omitempty"`
-	LastName   *string `json:"last_name,omitempty"`
+	FirstName  *string `json:"firstName,omitempty"`
+	LastName   *string `json:"lastName,omitempty"`
 }
 
 func (r *UpdateUserRequest) Validate() error {

@@ -2,6 +2,7 @@ package response
 
 import (
 	"cloud-sprint/internal/constants"
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -14,7 +15,7 @@ type BaseResponse struct {
 	Data       interface{}              `json:"data"`
 	Pagination *Pagination              `json:"pagination,omitempty"`
 	Timestamp  time.Time                `json:"timestamp"`
-	Trace      error                    `json:"-"`
+	Trace      error                    `json:"trace"`
 }
 
 type Pagination struct {
@@ -26,7 +27,10 @@ type Pagination struct {
 
 func (r *BaseResponse) Send(c *fiber.Ctx) error {
 	statusCode := int(r.Code)
-	return c.Status(statusCode).JSON(r)
+	c.SendStatus(statusCode)
+	c.Status(statusCode)
+	fmt.Printf("Setting status code to: %d\n", statusCode)
+	return c.JSON(r)
 }
 
 func NewSuccessResponse(c *fiber.Ctx, code constants.HttpStatusCode, data interface{}, message string) *BaseResponse {

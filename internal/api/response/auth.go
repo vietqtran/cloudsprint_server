@@ -29,15 +29,15 @@ func NewUserResponse(user db.User) UserResponse {
 	}
 }
 
-type LoginResponse struct {
+type SignInResponse struct {
 	User         UserResponse `json:"user"`
 	AccessToken  string       `json:"access_token"`
 	RefreshToken string       `json:"refresh_token"`
 	SessionID    string       `json:"session_id"`
 }
 
-func NewLoginResponse(user db.User, accessToken, refreshToken, sessionID string) LoginResponse {
-	return LoginResponse{
+func NewSignInResponse(user db.User, accessToken, refreshToken, sessionID string) SignInResponse {
+	return SignInResponse{
 		User:         NewUserResponse(user),
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,

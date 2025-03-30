@@ -29,27 +29,7 @@ func New(store db.Querier, cfg config.Config, log *zap.Logger) (*Server, error) 
 		return nil, fmt.Errorf("failed to create token maker: %w", err)
 	}
 
-	app := fiber.New(fiber.Config{
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			code := fiber.StatusInternalServerError
-			message := "Internal Server Error"
-
-			if e, ok := err.(*fiber.Error); ok {
-				code = e.Code
-				message = e.Message
-			}
-
-			log.Error("error handler caught error",
-				zap.Int("status", code),
-				zap.String("message", message),
-				zap.Error(err),
-			)
-
-			return c.Status(code).JSON(fiber.Map{
-				"error": message,
-			})
-		},
-	})
+	app := fiber.New(fiber.Config{})
 
 	app.Use(recover.New())
 	app.Use(cors.New())

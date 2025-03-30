@@ -23,40 +23,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/login": {
-            "post": {
-                "description": "Login with username and password",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Login a user",
-                "parameters": [
-                    {
-                        "description": "Login request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.LoginResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/auth/refresh": {
             "post": {
                 "description": "Refresh access token using refresh token",
@@ -91,9 +57,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/register": {
+        "/auth/sign-in": {
             "post": {
-                "description": "Register a new user with username, email, and password",
+                "description": "SignIn with username and password",
                 "consumes": [
                     "application/json"
                 ],
@@ -103,15 +69,49 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
-                "summary": "Register a new user",
+                "summary": "SignIn a user",
                 "parameters": [
                     {
-                        "description": "Register request",
+                        "description": "SignIn request",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.RegisterRequest"
+                            "$ref": "#/definitions/request.SignInRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.SignInResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/sign-up": {
+            "post": {
+                "description": "SignUp a new user with username, email, and password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "SignUp a new user",
+                "parameters": [
+                    {
+                        "description": "SignUp request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SignUpRequest"
                         }
                     }
                 ],
@@ -120,38 +120,21 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "request.LoginRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                }
-            }
-        },
         "request.RefreshTokenRequest": {
             "type": "object",
             "properties": {
-                "refresh_token": {
+                "refreshToken": {
                     "type": "string"
                 },
-                "session_id": {
+                "sessionId": {
                     "type": "string"
                 }
             }
         },
-        "request.RegisterRequest": {
+        "request.SignInRequest": {
             "type": "object",
             "properties": {
                 "email": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "last_name": {
                     "type": "string"
                 },
                 "password": {
@@ -159,7 +142,35 @@ const docTemplate = `{
                 }
             }
         },
-        "response.LoginResponse": {
+        "request.SignUpRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.RefreshTokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.SignInResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -173,17 +184,6 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/response.UserResponse"
-                }
-            }
-        },
-        "response.RefreshTokenResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "refresh_token": {
-                    "type": "string"
                 }
             }
         },

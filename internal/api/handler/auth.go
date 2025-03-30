@@ -10,7 +10,6 @@ import (
 	"cloud-sprint/config"
 	"cloud-sprint/internal/api/request"
 	"cloud-sprint/internal/api/response"
-	"cloud-sprint/internal/constants"
 	db "cloud-sprint/internal/db/sqlc"
 	"cloud-sprint/internal/token"
 	"cloud-sprint/pkg/util"
@@ -36,27 +35,36 @@ func NewAuthHandler(store db.Querier, tokenMaker token.Maker, config config.Conf
 	}
 }
 
-// Register handles user registration
-// @Summary Register a new user
-// @Description Register a new user with username, email, and password
+// SignUp handles user registration
+// @Summary SignUp a new user
+// @Description SignUp a new user with username, email, and password
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param request body request.RegisterRequest true "Register request"
-// @Router /auth/register [post]
-func (h *AuthHandler) Register(c *fiber.Ctx) error {
-	var req request.RegisterRequest
+// @Param request body request.SignUpRequest true "SignUp request"
+// @Router /auth/sign-up [post]
+func (h *AuthHandler) SignUp(c *fiber.Ctx) error {
+	var req request.SignUpRequest
 	if err := c.BodyParser(&req); err != nil {
-		return response.NewErrorResponse(c, constants.StatusBadRequest, "Invalid request body", err).Send(c)
+		return response.BadRequest(c, "Invalid request body", err)
 	}
 
 	if err := req.Validate(); err != nil {
-		return response.NewErrorResponse(c, constants.StatusBadRequest, err.Error(), nil).Send(c)
+		return response.BadRequest(c, err.Error(), nil)
 	}
 
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
-		return response.NewErrorResponse(c, constants.StatusBadRequest, "Failed to hash password", err).Send(c)
+		return response.BadRequest(c, "Failed to hash password", err)
+	}
+
+	_, err = h.store.GetUserByEmail(c.Context(), req.Email)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return response.InternalServerError(c, "Failed to get user", err)
+		}
+	} else {
+		return response.BadRequest(c, "User already exists", nil)
 	}
 
 	user, err := h.store.CreateUser(c.Context(), db.CreateUserParams{
@@ -65,7 +73,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		LastName:  req.LastName,
 	})
 	if err != nil {
-		return response.NewErrorResponse(c, constants.StatusBadRequest, "Failed to create user", err).Send(c)
+		return response.BadRequest(c, "Failed to create user", err)
 	}
 
 	_, err = h.store.CreateAccount(c.Context(), db.CreateAccountParams{
@@ -77,20 +85,20 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		return response.InternalServerError(c, "Failed to create account", err)
 	}
 
-	return response.Created(c, nil, "User registered successfully")
+	return response.Created(c, nil, "User signed up successfully! You can sign in now.")
 }
 
-// Login handles user login
-// @Summary Login a user
-// @Description Login with username and password
+// SignIn handles user login
+// @Summary SignIn a user
+// @Description SignIn with username and password
 // @Tags auth
 // @Accept json
 // @Produce json
-// @Param request body request.LoginRequest true "Login request"
-// @Success 200 {object} response.LoginResponse
-// @Router /auth/login [post]
-func (h *AuthHandler) Login(c *fiber.Ctx) error {
-	var req request.LoginRequest
+// @Param request body request.SignInRequest true "SignIn request"
+// @Success 200 {object} response.SignInResponse
+// @Router /auth/sign-in [post]
+func (h *AuthHandler) SignIn(c *fiber.Ctx) error {
+	var req request.SignInRequest
 	if err := c.BodyParser(&req); err != nil {
 		return response.BadRequest(c, "Invalid request body", err)
 	}
@@ -159,9 +167,9 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		return response.InternalServerError(c, "Failed to get user", err)
 	}
 
-	loginResponse := response.NewLoginResponse(user, accessToken, refreshToken, session.ID.String())
+	loginResponse := response.NewSignInResponse(user, accessToken, refreshToken, session.ID.String())
 
-	return response.Success(c, loginResponse, "Login successful")
+	return response.Success(c, loginResponse, "SignIn successful")
 }
 
 // RefreshToken handles token refresh
