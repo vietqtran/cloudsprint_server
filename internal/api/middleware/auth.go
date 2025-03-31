@@ -29,7 +29,6 @@ func (middleware *AuthMiddleware) Handle(c *fiber.Ctx) error {
 	if accessToken == "" {
 		return fiber.NewError(fiber.StatusUnauthorized, "authentication cookie is missing")
 	}
-
 	payload, err := middleware.tokenMaker.VerifyToken(accessToken)
 	if err != nil {
 		if err == token.ErrExpiredToken {
@@ -37,7 +36,6 @@ func (middleware *AuthMiddleware) Handle(c *fiber.Ctx) error {
 		}
 		return fiber.NewError(fiber.StatusUnauthorized, "invalid token")
 	}
-
 	c.Locals("current_user_id", payload.UserID)
 	c.Locals("current_user_email", payload.Email)
 

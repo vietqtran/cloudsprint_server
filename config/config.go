@@ -10,11 +10,11 @@ import (
 )
 
 type Config struct {
-	Environment string        
-	Server      ServerConfig  
-	Database    DBConfig      
-	JWT         JWTConfig     
-	Log         LogConfig     
+	Environment string
+	Server      ServerConfig
+	Database    DBConfig
+	JWT         JWTConfig
+	Log         LogConfig
 }
 
 type ServerConfig struct {

@@ -1,11 +1,11 @@
-.PHONY: all build run test clean migrate sqlc swag docker docker-run
+.PHONY: all build run test clean migrate sqlc swag docker docker-run format lint pre-commit imports
 
 # Project variables
 BINARY_NAME=cloudsprint_server
 DB_URL=postgresql://neondb_owner:J1Kmrk5PNRqg@ep-white-tooth-a1uuj3k9.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
 MIGRATION_URL=file://db/migration
 
-all: clean sqlc swag build
+all: clean sqlc swag build format
 
 build:
 	@echo "Building application..."
@@ -85,4 +85,17 @@ docker-run: docker
 	@echo "Running Docker container..."
 	docker run -p 8080:8080 --name $(BINARY_NAME) -d $(BINARY_NAME)
 
-setup: clean postgres migrate-up sqlc swag build
+format:
+	@echo "Formatting code..."
+
+imports:
+	go install golang.org/x/tools/cmd/goimports@latest
+	goimports -w ./
+
+lint:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+	golangci-lint run
+
+pre-commit: format imports lint
+
+setup: clean postgres migrate-up sqlc swag build format

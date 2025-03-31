@@ -5,18 +5,12 @@ import (
 	"go.uber.org/zap"
 
 	"cloud-sprint/config"
-	"cloud-sprint/internal/api/middleware"
 	db "cloud-sprint/internal/db/sqlc"
 	"cloud-sprint/internal/token"
 )
 
-func SetupRoutes(app *fiber.App, store db.Querier, tokenMaker token.Maker, logger *zap.Logger, config config.Config) {
-	loggerMiddleware := middleware.NewLogger(logger)
-
-	app.Use(middleware.CORS())
-	app.Use(loggerMiddleware)
-
+func SetupRoutes(app *fiber.App, store db.Querier, tokenMaker token.Maker, logger *zap.Logger, config config.Config, authMiddleware fiber.Handler) {
 	api := app.Group("/api/v1")
 
-	SetupAuthRoutes(api, store, tokenMaker, logger, config)
+	SetupAuthRoutes(api, store, tokenMaker, config, authMiddleware)
 }

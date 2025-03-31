@@ -7,10 +7,10 @@ import (
 )
 
 type SignUpRequest struct {
-	Email      string `json:"email"`
-	Password   string `json:"password"`
-	FirstName  string `json:"firstName"`
-	LastName   string `json:"lastName"`
+	Email     string `json:"email"`
+	Password  string `json:"password"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
 }
 
 func (r *SignUpRequest) Validate() error {
@@ -68,9 +68,9 @@ func (r *RefreshTokenRequest) Validate() error {
 }
 
 type UpdateUserRequest struct {
-	Email      *string `json:"email,omitempty"`
-	FirstName  *string `json:"firstName,omitempty"`
-	LastName   *string `json:"lastName,omitempty"`
+	Email     *string `json:"email,omitempty"`
+	FirstName *string `json:"firstName,omitempty"`
+	LastName  *string `json:"lastName,omitempty"`
 }
 
 func (r *UpdateUserRequest) Validate() error {

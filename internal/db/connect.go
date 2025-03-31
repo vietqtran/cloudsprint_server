@@ -22,7 +22,7 @@ func Connect(dbConfig config.DBConfig, log *zap.Logger) (*sql.DB, sqlc.Querier, 
 		conn.Close()
 		return nil, nil, fmt.Errorf("failed to ping database: %w", err)
 	}
-	
+
 	log.Info("database connected successfully")
 
 	queries := sqlc.New(conn)

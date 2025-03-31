@@ -37,7 +37,12 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("failed to initialize logger: %w", err))
 	}
-	defer log.Sync()
+
+	defer func() {
+		if err := log.Sync(); err != nil {
+			fmt.Printf("failed to sync logger: %v\n", err)
+		}
+	}()
 
 	conn, queries, err := db.Connect(cfg.Database, log)
 	if err != nil {

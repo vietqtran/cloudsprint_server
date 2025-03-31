@@ -4,12 +4,12 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/swagger"
 	"go.uber.org/zap"
 
 	"cloud-sprint/config"
+	"cloud-sprint/internal/api/middleware"
 	"cloud-sprint/internal/api/router"
 	db "cloud-sprint/internal/db/sqlc"
 	"cloud-sprint/internal/token"
@@ -32,9 +32,14 @@ func New(store db.Querier, cfg config.Config, log *zap.Logger) (*Server, error) 
 	app := fiber.New(fiber.Config{})
 
 	app.Use(recover.New())
-	app.Use(cors.New())
+	app.Use(middleware.CORS())
 
-	router.SetupRoutes(app, store, tokenMaker, log, cfg)
+	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, "Authorization")
+
+	loggerMiddleware := middleware.NewLogger(log)
+	app.Use(loggerMiddleware)
+
+	router.SetupRoutes(app, store, tokenMaker, log, cfg, authMiddleware)
 
 	app.Get("/swagger/*", swagger.HandlerDefault)
 

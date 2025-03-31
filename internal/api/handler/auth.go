@@ -292,6 +292,25 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 	return response.Success(c, refreshResponse, "Token refreshed successfully")
 }
 
+func (h *AuthHandler) Me(c *fiber.Ctx) error {
+	userID, ok := c.Locals("current_user_id").(string)
+	if !ok {
+		return response.Unauthorized(c, "User not found")
+	}
+
+	userUUID, err := uuid.Parse(userID)
+	if err != nil {
+		return response.BadRequest(c, "Invalid user ID", err)
+	}
+
+	user, err := h.store.GetUserByID(c.Context(), userUUID)
+	if err != nil {
+		return response.InternalServerError(c, "Failed to get user", err)
+	}
+
+	return response.Success(c, response.NewUserResponse(user), "User found successfully")
+}
+
 func SetHttpOnlyCookie(c *fiber.Ctx, data SetCookieData) {
 	cookie := new(fiber.Cookie)
 	cookie.Name = data.Name

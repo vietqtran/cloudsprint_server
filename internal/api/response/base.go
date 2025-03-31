@@ -27,7 +27,9 @@ type Pagination struct {
 
 func (r *BaseResponse) Send(c *fiber.Ctx) error {
 	statusCode := int(r.Code)
-	c.SendStatus(statusCode)
+	if err := c.SendStatus(statusCode); err != nil {
+		return err
+	}
 	c.Status(statusCode)
 	fmt.Printf("Setting status code to: %d\n", statusCode)
 	return c.JSON(r)
