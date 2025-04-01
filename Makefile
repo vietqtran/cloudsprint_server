@@ -35,10 +35,10 @@ clean:
 sqlc:
 	@echo "Generating SQLC code..."
 ifeq ($(OS),Windows_NT)
-	go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.20.0
+	go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.28.0
 	sqlc generate -f db/sqlc.yaml
 else
-	go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.20.0
+	go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.28.0
 	sqlc generate -f db/sqlc.yaml
 endif
 
