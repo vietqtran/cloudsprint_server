@@ -25,19 +25,23 @@ func NewAuthMiddleware(tokenMaker token.Maker, cookieName string) fiber.Handler 
 }
 
 func (middleware *AuthMiddleware) Handle(c *fiber.Ctx) error {
-	accessToken := c.Cookies(middleware.cookieName)
-	if accessToken == "" {
-		return fiber.NewError(fiber.StatusUnauthorized, "authentication cookie is missing")
+	tokenString := c.Cookies(middleware.cookieName)
+	if tokenString == "" {
+		return fiber.NewError(fiber.StatusUnauthorized, "token is missing")
 	}
-	payload, err := middleware.tokenMaker.VerifyToken(accessToken)
+	payload, err := middleware.tokenMaker.VerifyToken(tokenString)
 	if err != nil {
 		if err == token.ErrExpiredToken {
 			return fiber.NewError(fiber.StatusUnauthorized, "token has expired")
 		}
 		return fiber.NewError(fiber.StatusUnauthorized, "invalid token")
 	}
-	c.Locals("current_user_id", payload.UserID)
-	c.Locals("current_user_email", payload.Email)
+	if middleware.cookieName == "Authorization" {
+		c.Locals("current_user_id", payload.UserID)
+		c.Locals("current_user_email", payload.Email)
+	} else {
+		c.Locals("refresh_token", tokenString)
+	}
 
 	return c.Next()
 }

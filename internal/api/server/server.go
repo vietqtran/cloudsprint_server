@@ -35,11 +35,12 @@ func New(store db.Querier, cfg config.Config, log *zap.Logger) (*Server, error) 
 	app.Use(middleware.CORS())
 
 	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, "Authorization")
+	refreshMiddleware := middleware.NewAuthMiddleware(tokenMaker, "Refresh")
 
 	loggerMiddleware := middleware.NewLogger(log)
 	app.Use(loggerMiddleware)
 
-	router.SetupRoutes(app, store, tokenMaker, log, cfg, authMiddleware)
+	router.SetupRoutes(app, store, tokenMaker, log, cfg, authMiddleware, refreshMiddleware)
 
 	app.Get("/swagger/*", swagger.HandlerDefault)
 

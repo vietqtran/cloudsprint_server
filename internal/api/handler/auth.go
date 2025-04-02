@@ -19,6 +19,7 @@ type SetCookieData struct {
 	Name      string
 	Token     string
 	ExpiresAt int
+	ENV       string
 }
 
 type AuthHandler struct {
@@ -154,12 +155,14 @@ func (h *AuthHandler) SignIn(c *fiber.Ctx) error {
 		Name:      "Refresh",
 		Token:     refreshToken,
 		ExpiresAt: int(h.config.JWT.RefreshDuration),
+		ENV:       h.config.Environment,
 	})
 
 	SetHttpOnlyCookie(c, SetCookieData{
 		Name:      "Authorization",
 		Token:     accessToken,
 		ExpiresAt: int(h.config.JWT.TokenDuration),
+		ENV:       h.config.Environment,
 	})
 
 	user, err := h.store.GetUserByID(c.Context(), account.UserID)
@@ -184,65 +187,70 @@ func (h *AuthHandler) SignIn(c *fiber.Ctx) error {
 func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 	var req request.RefreshTokenRequest
 	if err := c.BodyParser(&req); err != nil {
-		return response.BadRequest(c, "Invalid request body", err)
+		return response.BadRequest(c, "invalid request body", err)
 	}
 	if err := req.Validate(); err != nil {
-		return response.BadRequest(c, "Invalid request body", err)
+		return response.BadRequest(c, "invalid request body", err)
 	}
 
-	refreshPayload, err := h.tokenMaker.VerifyRefreshToken(req.RefreshToken)
+	refreshToken, ok := c.Locals("refresh_token").(string)
+	if !ok {
+		return response.Unauthorized(c, "token is missing")
+	}
+
+	refreshPayload, err := h.tokenMaker.VerifyRefreshToken(refreshToken)
 	if err != nil {
-		return response.Unauthorized(c, "Invalid refresh token")
+		return response.Unauthorized(c, "invalid refresh token")
 	}
 
 	sessionID, err := uuid.Parse(req.SessionID)
 	if err != nil {
-		return response.BadRequest(c, "Invalid session ID", err)
+		return response.BadRequest(c, "invalid session ID", err)
 	}
 
 	session, err := h.store.GetSession(c.Context(), sessionID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return response.Unauthorized(c, "Session not found")
+			return response.Unauthorized(c, "session not found")
 		}
 		return response.InternalServerError(c, "Failed to get session", err)
 	}
 
 	if session.IsBlocked {
-		return response.Unauthorized(c, "Session is blocked")
+		return response.Unauthorized(c, "session is blocked")
 	}
 
 	if time.Now().After(session.ExpiresAt) {
-		return response.Unauthorized(c, "Session expired")
+		return response.Unauthorized(c, "session expired")
 	}
 
-	if session.RefreshToken != req.RefreshToken {
-		return response.Unauthorized(c, "Refresh token doesn't match")
+	if session.RefreshToken != refreshToken {
+		return response.Unauthorized(c, "refresh token doesn't match")
 	}
 
 	refreshUserID, err := uuid.Parse(refreshPayload.UserID)
 	if err != nil {
-		return response.BadRequest(c, "Invalid user ID in refresh token", err)
+		return response.BadRequest(c, "invalid user ID in refresh token", err)
 	}
 
 	account, err := h.store.GetAccountById(c.Context(), session.AccountID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return response.Unauthorized(c, "Account not found in session")
+			return response.Unauthorized(c, "account not found in session")
 		}
-		return response.InternalServerError(c, "Failed to get account", err)
+		return response.InternalServerError(c, "failed to get account", err)
 	}
 
 	if account.UserID != refreshUserID {
-		return response.Unauthorized(c, "User ID doesn't match")
+		return response.Unauthorized(c, "user id doesn't match")
 	}
 
 	user, err := h.store.GetUserByID(c.Context(), account.UserID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return response.NotFound(c, "User not found")
+			return response.NotFound(c, "user not found")
 		}
-		return response.InternalServerError(c, "Failed to get user", err)
+		return response.InternalServerError(c, "failed to get user", err)
 	}
 
 	accessToken, _, err := h.tokenMaker.CreateToken(
@@ -251,7 +259,7 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 		h.config.JWT.TokenDuration,
 	)
 	if err != nil {
-		return response.InternalServerError(c, "Failed to create access token", err)
+		return response.InternalServerError(c, "failed to create access token", err)
 	}
 
 	refreshToken, refreshTokenPayload, err := h.tokenMaker.CreateRefreshToken(
@@ -260,7 +268,7 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 		h.config.JWT.RefreshDuration,
 	)
 	if err != nil {
-		return response.InternalServerError(c, "Failed to create refresh token", err)
+		return response.InternalServerError(c, "failed to create refresh token", err)
 	}
 
 	_, err = h.store.UpdateSessionRefreshToken(c.Context(), db.UpdateSessionRefreshTokenParams{
@@ -269,7 +277,7 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 		ExpiresAt:    refreshTokenPayload.ExpiredAt,
 	})
 	if err != nil {
-		return response.InternalServerError(c, "Failed to refresh token", err)
+		return response.InternalServerError(c, "failed to refresh token", err)
 	}
 
 	refreshResponse := response.RefreshTokenResponse{
@@ -281,34 +289,36 @@ func (h *AuthHandler) RefreshToken(c *fiber.Ctx) error {
 		Name:      "Refresh",
 		Token:     refreshToken,
 		ExpiresAt: int(h.config.JWT.RefreshDuration),
+		ENV:       h.config.Environment,
 	})
 
 	SetHttpOnlyCookie(c, SetCookieData{
 		Name:      "Authorization",
 		Token:     accessToken,
 		ExpiresAt: int(h.config.JWT.TokenDuration),
+		ENV:       h.config.Environment,
 	})
 
-	return response.Success(c, refreshResponse, "Token refreshed successfully")
+	return response.Success(c, refreshResponse, "token refreshed successfully")
 }
 
 func (h *AuthHandler) Me(c *fiber.Ctx) error {
 	userID, ok := c.Locals("current_user_id").(string)
 	if !ok {
-		return response.Unauthorized(c, "User not found")
+		return response.Unauthorized(c, "user not found")
 	}
 
 	userUUID, err := uuid.Parse(userID)
 	if err != nil {
-		return response.BadRequest(c, "Invalid user ID", err)
+		return response.BadRequest(c, "invalid user id", err)
 	}
 
 	user, err := h.store.GetUserByID(c.Context(), userUUID)
 	if err != nil {
-		return response.InternalServerError(c, "Failed to get user", err)
+		return response.InternalServerError(c, "failed to get user", err)
 	}
 
-	return response.Success(c, response.NewUserResponse(user), "User found successfully")
+	return response.Success(c, response.NewUserResponse(user), "user found successfully")
 }
 
 func SetHttpOnlyCookie(c *fiber.Ctx, data SetCookieData) {
@@ -317,7 +327,7 @@ func SetHttpOnlyCookie(c *fiber.Ctx, data SetCookieData) {
 	cookie.Value = data.Token
 	cookie.Path = "/"
 	cookie.HTTPOnly = true
-	cookie.Secure = true
-	cookie.MaxAge = 3600 * data.ExpiresAt
+	cookie.Secure = data.ENV != "development"
+	cookie.MaxAge = int(time.Hour) * data.ExpiresAt
 	c.Cookie(cookie)
 }
