@@ -22,5 +22,6 @@ secret.md
 tmp
 
 logs
-db/sqlc
+internal/db/sqlc
 .env
+cloudsprint_server
