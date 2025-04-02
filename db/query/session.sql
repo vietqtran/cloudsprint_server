@@ -12,11 +12,11 @@ INSERT INTO sessions (
 
 -- name: GetSession :one
 SELECT * FROM sessions
-WHERE id = $1 LIMIT 1;
+WHERE id = $1 AND status != 3 LIMIT 1;
 
 -- name: ListSessions :many
 SELECT * FROM sessions
-WHERE account_id = $1
+WHERE account_id = $1 AND status != 3
 ORDER BY created_at DESC;
 
 -- name: UpdateSessionRefreshToken :one
@@ -25,13 +25,14 @@ SET
   refresh_token = $2,
   expires_at = $3,
   updated_at = now()
-WHERE id = $1
+WHERE id = $1 AND status != 3
 RETURNING *;
 
 -- name: DeleteExpiredSessions :exec
 DELETE FROM sessions
 WHERE expires_at < now();
 
--- name: DeleteSession :exec
-DELETE FROM sessions
-WHERE id = $1;
+-- name: DeleteSessionByAccountID :exec
+UPDATE sessions
+SET status = 3
+WHERE account_id = $1;

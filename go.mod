@@ -1,6 +1,8 @@
 module cloud-sprint
 
-go 1.23.8
+go 1.23.0
+
+toolchain go1.23.7
 
 require (
 	github.com/gofiber/fiber/v2 v2.52.6

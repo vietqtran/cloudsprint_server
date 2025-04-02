@@ -18,6 +18,7 @@ CREATE TABLE "users" (
   "email" varchar UNIQUE NOT NULL,
   "first_name" varchar NOT NULL CHECK (LENGTH("first_name") > 1) CHECK (LENGTH("first_name") < 256),
   "last_name" varchar NOT NULL CHECK (LENGTH("last_name") > 1) CHECK (LENGTH("last_name") < 256),
+  "status" int NOT NULL DEFAULT 1,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
@@ -30,6 +31,7 @@ CREATE TABLE "sessions" (
   "client_ip" varchar NOT NULL,
   "is_blocked" boolean NOT NULL DEFAULT false,
   "expires_at" timestamptz NOT NULL,
+  "status" int NOT NULL DEFAULT 1,
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
