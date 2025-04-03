@@ -1,4 +1,63 @@
 basePath: /api/v1
+definitions:
+  request.RefreshTokenRequest:
+    properties:
+      sessionId:
+        type: string
+    type: object
+  request.SignInRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  request.SignUpRequest:
+    properties:
+      email:
+        type: string
+      firstName:
+        type: string
+      lastName:
+        type: string
+      password:
+        type: string
+    type: object
+  response.RefreshTokenResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  response.SignInResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      session_id:
+        type: string
+      user:
+        $ref: '#/definitions/response.UserResponse'
+    type: object
+  response.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      status:
+        type: integer
+      updated_at:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -11,5 +70,67 @@ info:
   termsOfService: http://swagger.io/terms/
   title: Go Postgres API
   version: "1.0"
-paths: {}
+paths:
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh access token using refresh token
+      parameters:
+      - description: Refresh token request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.RefreshTokenResponse'
+      summary: Refresh token
+      tags:
+      - auth
+  /auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: SignIn with username and password
+      parameters:
+      - description: SignIn request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.SignInRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.SignInResponse'
+      summary: SignIn a user
+      tags:
+      - auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: SignUp a new user with username, email, and password
+      parameters:
+      - description: SignUp request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.SignUpRequest'
+      produces:
+      - application/json
+      responses: {}
+      summary: SignUp a new user
+      tags:
+      - auth
 swagger: "2.0"

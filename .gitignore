@@ -25,3 +25,5 @@ logs
 internal/db/sqlc
 .env
 cloudsprint_server
+
+Makefile
