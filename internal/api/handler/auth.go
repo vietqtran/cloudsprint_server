@@ -154,6 +154,10 @@ func (h *AuthHandler) SignIn(c *fiber.Ctx) error {
 		return response.InternalServerError(c, "Failed to get account", err)
 	}
 
+	if !account.EmailVerified {
+		return response.Unauthorized(c, "Email not verified", nil)
+	}
+
 	err = util.CheckPassword(req.Password, account.HashedPassword)
 	if err != nil {
 		return response.Unauthorized(c, "Invalid email or password", err)
