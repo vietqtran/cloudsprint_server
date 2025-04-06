@@ -1,8 +1,157 @@
 basePath: /api/v1
 definitions:
+  constants.HttpStatusCode:
+    enum:
+    - 100
+    - 101
+    - 102
+    - 103
+    - 200
+    - 201
+    - 202
+    - 203
+    - 204
+    - 205
+    - 206
+    - 207
+    - 208
+    - 226
+    - 300
+    - 301
+    - 302
+    - 303
+    - 304
+    - 305
+    - 307
+    - 308
+    - 400
+    - 401
+    - 402
+    - 403
+    - 404
+    - 405
+    - 406
+    - 407
+    - 408
+    - 409
+    - 410
+    - 411
+    - 412
+    - 413
+    - 414
+    - 415
+    - 416
+    - 417
+    - 418
+    - 421
+    - 422
+    - 423
+    - 424
+    - 425
+    - 426
+    - 428
+    - 429
+    - 431
+    - 451
+    - 500
+    - 501
+    - 502
+    - 503
+    - 504
+    - 505
+    - 506
+    - 507
+    - 508
+    - 510
+    - 511
+    type: integer
+    x-enum-varnames:
+    - StatusContinue
+    - StatusSwitchingProtocols
+    - StatusProcessing
+    - StatusEarlyHints
+    - StatusOK
+    - StatusCreated
+    - StatusAccepted
+    - StatusNonAuthoritativeInformation
+    - StatusNoContent
+    - StatusResetContent
+    - StatusPartialContent
+    - StatusMultiStatus
+    - StatusAlreadyReported
+    - StatusIMUsed
+    - StatusMultipleChoices
+    - StatusMovedPermanently
+    - StatusFound
+    - StatusSeeOther
+    - StatusNotModified
+    - StatusUseProxy
+    - StatusTemporaryRedirect
+    - StatusPermanentRedirect
+    - StatusBadRequest
+    - StatusUnauthorized
+    - StatusPaymentRequired
+    - StatusForbidden
+    - StatusNotFound
+    - StatusMethodNotAllowed
+    - StatusNotAcceptable
+    - StatusProxyAuthRequired
+    - StatusRequestTimeout
+    - StatusConflict
+    - StatusGone
+    - StatusLengthRequired
+    - StatusPreconditionFailed
+    - StatusRequestEntityTooLarge
+    - StatusRequestURITooLong
+    - StatusUnsupportedMediaType
+    - StatusRequestedRangeNotSatisfiable
+    - StatusExpectationFailed
+    - StatusTeapot
+    - StatusMisdirectedRequest
+    - StatusUnprocessableEntity
+    - StatusLocked
+    - StatusFailedDependency
+    - StatusTooEarly
+    - StatusUpgradeRequired
+    - StatusPreconditionRequired
+    - StatusTooManyRequests
+    - StatusRequestHeaderFieldsTooLarge
+    - StatusUnavailableForLegalReasons
+    - StatusInternalServerError
+    - StatusNotImplemented
+    - StatusBadGateway
+    - StatusServiceUnavailable
+    - StatusGatewayTimeout
+    - StatusHTTPVersionNotSupported
+    - StatusVariantAlsoNegotiates
+    - StatusInsufficientStorage
+    - StatusLoopDetected
+    - StatusNotExtended
+    - StatusNetworkAuthenticationRequired
+  request.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    type: object
   request.RefreshTokenRequest:
     properties:
+      refreshToken:
+        type: string
       sessionId:
+        type: string
+    type: object
+  request.ResetPasswordRequest:
+    properties:
+      confirmPassword:
+        type: string
+      password:
+        type: string
+      token:
+        type: string
+    type: object
+  request.SendEmailOTPRequest:
+    properties:
+      email:
         type: string
     type: object
   request.SignInRequest:
@@ -22,6 +171,49 @@ definitions:
         type: string
       password:
         type: string
+    type: object
+  request.VerifyEmailOTPRequest:
+    properties:
+      email:
+        type: string
+      otp:
+        type: string
+    type: object
+  request.VerifyResetTokenRequest:
+    properties:
+      token:
+        type: string
+    type: object
+  response.BaseResponse:
+    properties:
+      code:
+        $ref: '#/definitions/constants.HttpStatusCode'
+      data: {}
+      message:
+        type: string
+      pagination:
+        $ref: '#/definitions/response.Pagination'
+      status:
+        type: string
+      timestamp:
+        type: string
+      trace: {}
+    type: object
+  response.EmailVerificationResponse:
+    properties:
+      emailVerified:
+        type: boolean
+    type: object
+  response.Pagination:
+    properties:
+      page:
+        type: integer
+      pages:
+        type: integer
+      per_page:
+        type: integer
+      total:
+        type: integer
     type: object
   response.RefreshTokenResponse:
     properties:
@@ -71,11 +263,33 @@ info:
   title: Go Postgres API
   version: "1.0"
 paths:
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Send a password reset email
+      parameters:
+      - description: Forgot password request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.BaseResponse'
+      summary: Request password reset
+      tags:
+      - auth
   /auth/refresh:
     post:
       consumes:
       - application/json
-      description: Refresh access token using refresh token
+      description: Refresh access token using refresh token or session ID
       parameters:
       - description: Refresh token request
         in: body
@@ -91,6 +305,28 @@ paths:
           schema:
             $ref: '#/definitions/response.RefreshTokenResponse'
       summary: Refresh token
+      tags:
+      - auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Reset password with a valid token
+      parameters:
+      - description: Reset password request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.BaseResponse'
+      summary: Reset password
       tags:
       - auth
   /auth/sign-in:
@@ -131,6 +367,89 @@ paths:
       - application/json
       responses: {}
       summary: SignUp a new user
+      tags:
+      - auth
+  /auth/verify-email/send-otp:
+    post:
+      consumes:
+      - application/json
+      description: Send a one-time password to verify email
+      parameters:
+      - description: Send OTP request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.SendEmailOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.BaseResponse'
+      summary: Send email verification OTP
+      tags:
+      - auth
+  /auth/verify-email/status:
+    get:
+      consumes:
+      - application/json
+      description: Check if the authenticated user's email is verified
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.EmailVerificationResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Check email verification status
+      tags:
+      - auth
+  /auth/verify-email/verify:
+    post:
+      consumes:
+      - application/json
+      description: Verify email address using OTP
+      parameters:
+      - description: Verify OTP request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.VerifyEmailOTPRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.EmailVerificationResponse'
+      summary: Verify email with OTP
+      tags:
+      - auth
+  /auth/verify-reset-token:
+    post:
+      consumes:
+      - application/json
+      description: Verify if a password reset token is valid
+      parameters:
+      - description: Verify token request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/request.VerifyResetTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.BaseResponse'
+      summary: Verify reset token
       tags:
       - auth
 swagger: "2.0"

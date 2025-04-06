@@ -96,18 +96,20 @@ func BadRequest(c *fiber.Ctx, message string, err error) error {
 	return NewErrorResponse(c, constants.StatusBadRequest, message, err).Send(c)
 }
 
-func Unauthorized(c *fiber.Ctx, message string) error {
-	return NewErrorResponse(c, constants.StatusUnauthorized, message, nil).Send(c)
+func Unauthorized(c *fiber.Ctx, message string, err error) error {
+	return NewErrorResponse(c, constants.StatusUnauthorized, message, err).Send(c)
 }
 
 func Forbidden(c *fiber.Ctx, message string) error {
 	return NewErrorResponse(c, constants.StatusForbidden, message, nil).Send(c)
 }
 
-func NotFound(c *fiber.Ctx, message string) error {
-	return NewErrorResponse(c, constants.StatusNotFound, message, nil).Send(c)
+func NotFound(c *fiber.Ctx, message string, err error) error {
+	response := NewErrorResponse(c, constants.StatusNotFound, message, err)
+	return response.Send(c)
 }
 
-func InternalServerError(c *fiber.Ctx, message string, trace error) error {
-	return NewErrorResponse(c, constants.StatusInternalServerError, message, trace).Send(c)
+func InternalServerError(c *fiber.Ctx, message string, err error) error {
+	response := NewErrorResponse(c, constants.StatusInternalServerError, message, err)
+	return response.Send(c)
 }

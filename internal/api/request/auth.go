@@ -51,12 +51,13 @@ func (r *SignInRequest) Validate() error {
 }
 
 type RefreshTokenRequest struct {
-	SessionID string `json:"sessionId"`
+	SessionID    string `json:"sessionId,omitempty"`
+	RefreshToken string `json:"refreshToken,omitempty"`
 }
 
 func (r *RefreshTokenRequest) Validate() error {
-	if r.SessionID == "" {
-		return errors.New("session ID is required")
+	if r.SessionID == "" && r.RefreshToken == "" {
+		return errors.New("either session ID or refresh token is required")
 	}
 
 	return nil

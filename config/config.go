@@ -10,11 +10,13 @@ import (
 )
 
 type Config struct {
-	Environment string
-	Server      ServerConfig
-	Database    DBConfig
-	JWT         JWTConfig
-	Log         LogConfig
+	Environment     string
+	Server          ServerConfig
+	Database        DBConfig
+	JWT             JWTConfig
+	Log             LogConfig
+	Email           EmailConfig
+	FrontendBaseURL string
 }
 
 type ServerConfig struct {
@@ -39,6 +41,16 @@ type LogConfig struct {
 	Path  string
 }
 
+type EmailConfig struct {
+	SMTPHost     string
+	SMTPPort     int
+	SMTPUsername string
+	SMTPPassword string
+	FromEmail    string
+	FromName     string
+	TemplatesDir string
+}
+
 func LoadConfig() (Config, error) {
 	err := godotenv.Load()
 	if err != nil {
@@ -53,6 +65,11 @@ func LoadConfig() (Config, error) {
 	refreshDuration, err := parseDuration("JWT_REFRESH_TOKEN_DURATION")
 	if err != nil {
 		return Config{}, err
+	}
+
+	smtpPort, err := strconv.Atoi(getEnv("SMTP_PORT", "587"))
+	if err != nil {
+		smtpPort = 587
 	}
 
 	config := Config{
@@ -75,6 +92,16 @@ func LoadConfig() (Config, error) {
 			Level: getEnv("LOG_LEVEL", "info"),
 			Path:  getEnv("LOG_PATH", "logs"),
 		},
+		Email: EmailConfig{
+			SMTPHost:     getEnv("SMTP_HOST", "smtp.gmail.com"),
+			SMTPPort:     smtpPort,
+			SMTPUsername: getEnv("SMTP_USERNAME", ""),
+			SMTPPassword: getEnv("SMTP_PASSWORD", ""),
+			FromEmail:    getEnv("EMAIL_FROM", ""),
+			FromName:     getEnv("EMAIL_FROM_NAME", ""),
+			TemplatesDir: getEnv("EMAIL_TEMPLATES_DIR", "./templates/emails"),
+		},
+		FrontendBaseURL: getEnv("FRONTEND_BASE_URL", "http://localhost:3000"),
 	}
 
 	return config, nil
