@@ -19,7 +19,11 @@ func Connect(dbConfig config.DBConfig, log *zap.Logger) (*sql.DB, sqlc.Querier, 
 
 	err = conn.Ping()
 	if err != nil {
-		conn.Close()
+		if conn != nil {
+			if closeErr := conn.Close(); closeErr != nil {
+				log.Error("error closing database connection", zap.Error(closeErr))
+			}
+		}
 		return nil, nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 

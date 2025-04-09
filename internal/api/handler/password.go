@@ -45,11 +45,11 @@ func NewPasswordHandler(store db.Querier, tokenMaker token.Maker, config config.
 func (h *PasswordHandler) ForgotPassword(c *fiber.Ctx) error {
 	var req request.ForgotPasswordRequest
 	if err := c.BodyParser(&req); err != nil {
-		return response.BadRequest(c, "Invalid request body", err)
+		return response.BadRequest(c, "Invalid request body", err, nil)
 	}
 
 	if err := req.Validate(); err != nil {
-		return response.BadRequest(c, err.Error(), nil)
+		return response.BadRequest(c, err.Error(), nil, nil)
 	}
 
 	account, err := h.store.GetAccountByEmail(c.Context(), req.Email)
@@ -57,7 +57,7 @@ func (h *PasswordHandler) ForgotPassword(c *fiber.Ctx) error {
 		if err == sql.ErrNoRows {
 			return response.Success(c, nil, "If your email is registered, you will receive a password reset link")
 		}
-		return response.InternalServerError(c, "Failed to check email", err)
+		return response.InternalServerError(c, "Failed to check email", err, nil)
 	}
 
 	resetToken := util.RandomString(64)
@@ -72,7 +72,7 @@ func (h *PasswordHandler) ForgotPassword(c *fiber.Ctx) error {
 		ExpiresAt: expires,
 	})
 	if err != nil {
-		return response.InternalServerError(c, "Failed to create password reset", err)
+		return response.InternalServerError(c, "Failed to create password reset", err, nil)
 	}
 
 	resetURL := fmt.Sprintf("%s/reset-password?token=%s", h.config.FrontendBaseURL, resetToken)
@@ -88,7 +88,7 @@ func (h *PasswordHandler) ForgotPassword(c *fiber.Ctx) error {
 		},
 	})
 	if err != nil {
-		return response.InternalServerError(c, "Failed to send reset email", err)
+		return response.InternalServerError(c, "Failed to send reset email", err, nil)
 	}
 
 	return response.Success(c, nil, "If your email is registered, you will receive a password reset link")
@@ -106,19 +106,19 @@ func (h *PasswordHandler) ForgotPassword(c *fiber.Ctx) error {
 func (h *PasswordHandler) VerifyResetToken(c *fiber.Ctx) error {
 	var req request.VerifyResetTokenRequest
 	if err := c.BodyParser(&req); err != nil {
-		return response.BadRequest(c, "Invalid request body", err)
+		return response.BadRequest(c, "Invalid request body", err, nil)
 	}
 
 	if err := req.Validate(); err != nil {
-		return response.BadRequest(c, err.Error(), nil)
+		return response.BadRequest(c, err.Error(), nil, nil)
 	}
 
 	_, err := h.store.GetPasswordResetByToken(c.Context(), req.Token)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return response.BadRequest(c, "Invalid or expired reset token", nil)
+			return response.BadRequest(c, "Invalid or expired reset token", nil, nil)
 		}
-		return response.InternalServerError(c, "Failed to verify reset token", err)
+		return response.InternalServerError(c, "Failed to verify reset token", err, nil)
 	}
 
 	return response.Success(c, nil, "Token is valid")
@@ -136,29 +136,29 @@ func (h *PasswordHandler) VerifyResetToken(c *fiber.Ctx) error {
 func (h *PasswordHandler) ResetPassword(c *fiber.Ctx) error {
 	var req request.ResetPasswordRequest
 	if err := c.BodyParser(&req); err != nil {
-		return response.BadRequest(c, "Invalid request body", err)
+		return response.BadRequest(c, "Invalid request body", err, nil)
 	}
 
 	if err := req.Validate(); err != nil {
-		return response.BadRequest(c, err.Error(), nil)
+		return response.BadRequest(c, err.Error(), nil, nil)
 	}
 
 	resetRecord, err := h.store.GetPasswordResetByToken(c.Context(), req.Token)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return response.BadRequest(c, "Invalid or expired reset token", nil)
+			return response.BadRequest(c, "Invalid or expired reset token", nil, nil)
 		}
-		return response.InternalServerError(c, "Failed to verify reset token", err)
+		return response.InternalServerError(c, "Failed to verify reset token", err, nil)
 	}
 
 	account, err := h.store.GetAccountByEmail(c.Context(), resetRecord.Email)
 	if err != nil {
-		return response.InternalServerError(c, "Failed to get account", err)
+		return response.InternalServerError(c, "Failed to get account", err, nil)
 	}
 
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
-		return response.InternalServerError(c, "Failed to hash password", err)
+		return response.InternalServerError(c, "Failed to hash password", err, nil)
 	}
 
 	_, err = h.store.UpdateAccountPassword(c.Context(), db.UpdateAccountPasswordParams{
@@ -166,12 +166,12 @@ func (h *PasswordHandler) ResetPassword(c *fiber.Ctx) error {
 		HashedPassword: hashedPassword,
 	})
 	if err != nil {
-		return response.InternalServerError(c, "Failed to update password", err)
+		return response.InternalServerError(c, "Failed to update password", err, nil)
 	}
 
 	err = h.store.MarkPasswordResetUsed(c.Context(), resetRecord.ID)
 	if err != nil {
-		return response.InternalServerError(c, "Failed to mark token as used", err)
+		return response.InternalServerError(c, "Failed to mark token as used", err, nil)
 	}
 
 	return response.Success(c, nil, "Your password has been reset successfully")

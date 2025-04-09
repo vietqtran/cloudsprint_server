@@ -45,7 +45,7 @@ func (s *EmailService) SendEmail(data EmailData) error {
 	m.SetHeader("To", data.To)
 	m.SetHeader("Subject", data.Subject)
 	m.SetBody("text/html", body.String())
-	
+
 	dialer := mail.NewDialer(s.config.SMTPHost, s.config.SMTPPort, s.config.SMTPUsername, s.config.SMTPPassword)
 	dialer.Timeout = 10 * time.Second
 

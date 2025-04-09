@@ -1,5 +1,13 @@
 basePath: /api/v1
 definitions:
+  constants.ErrorCode:
+    enum:
+    - "000001"
+    - "000002"
+    type: string
+    x-enum-varnames:
+    - COMMON_ERROR
+    - EMAIL_UNVERIFIED
   constants.HttpStatusCode:
     enum:
     - 100
@@ -135,8 +143,6 @@ definitions:
     type: object
   request.RefreshTokenRequest:
     properties:
-      refreshToken:
-        type: string
       sessionId:
         type: string
     type: object
@@ -189,6 +195,8 @@ definitions:
       code:
         $ref: '#/definitions/constants.HttpStatusCode'
       data: {}
+      error_code:
+        $ref: '#/definitions/constants.ErrorCode'
       message:
         type: string
       pagination:

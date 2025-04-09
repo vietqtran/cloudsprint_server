@@ -318,6 +318,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "constants.ErrorCode": {
+            "type": "string",
+            "enum": [
+                "000001",
+                "000002"
+            ],
+            "x-enum-varnames": [
+                "COMMON_ERROR",
+                "EMAIL_UNVERIFIED"
+            ]
+        },
         "constants.HttpStatusCode": {
             "type": "integer",
             "enum": [
@@ -460,9 +471,6 @@ const docTemplate = `{
         "request.RefreshTokenRequest": {
             "type": "object",
             "properties": {
-                "refreshToken": {
-                    "type": "string"
-                },
                 "sessionId": {
                     "type": "string"
                 }
@@ -544,6 +552,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/constants.HttpStatusCode"
                 },
                 "data": {},
+                "error_code": {
+                    "$ref": "#/definitions/constants.ErrorCode"
+                },
                 "message": {
                     "type": "string"
                 },

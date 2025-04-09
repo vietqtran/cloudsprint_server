@@ -1,6 +1,7 @@
 package request
 
 import (
+	"cloud-sprint/internal/api/response"
 	"errors"
 	"net/mail"
 	"strings"
@@ -15,19 +16,19 @@ type SignUpRequest struct {
 
 func (r *SignUpRequest) Validate() error {
 	if strings.Contains(r.FirstName, " ") {
-		return errors.New("first name cannot contain spaces")
+		return response.BadRequest(nil, "first name cannot contain spaces", nil, nil)
 	}
 
 	if strings.Contains(r.LastName, " ") {
-		return errors.New("last name cannot contain spaces")
+		return response.BadRequest(nil, "last name cannot contain spaces", nil, nil)
 	}
 
 	if _, err := mail.ParseAddress(r.Email); err != nil {
-		return errors.New("invalid email address")
+		return response.BadRequest(nil, "invalid email address", nil, nil)
 	}
 
 	if len(r.Password) < 6 {
-		return errors.New("password must be at least 6 characters long")
+		return response.BadRequest(nil, "password must be at least 6 characters long", nil, nil)
 	}
 
 	return nil
@@ -40,24 +41,23 @@ type SignInRequest struct {
 
 func (r *SignInRequest) Validate() error {
 	if r.Email == "" {
-		return errors.New("email is required")
+		return response.BadRequest(nil, "email is required", nil, nil)
 	}
 
 	if r.Password == "" {
-		return errors.New("password is required")
+		return response.BadRequest(nil, "password is required", nil, nil)
 	}
 
 	return nil
 }
 
 type RefreshTokenRequest struct {
-	SessionID    string `json:"sessionId,omitempty"`
-	RefreshToken string `json:"refreshToken,omitempty"`
+	SessionID string `json:"sessionId,omitempty"`
 }
 
 func (r *RefreshTokenRequest) Validate() error {
-	if r.SessionID == "" && r.RefreshToken == "" {
-		return errors.New("either session ID or refresh token is required")
+	if r.SessionID == "" {
+		return response.BadRequest(nil, "Session ID is required", nil, nil)
 	}
 
 	return nil

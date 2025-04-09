@@ -48,7 +48,11 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to connect to database", zap.Error(err))
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			log.Error("error closing database connection", zap.Error(err))
+		}
+	}()
 
 	app, err := server.New(queries, cfg, log)
 	if err != nil {

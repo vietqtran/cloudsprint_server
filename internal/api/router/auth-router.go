@@ -21,8 +21,7 @@ func SetupAuthRoutes(api fiber.Router, store db.Querier, tokenMaker token.Maker,
 	auth := api.Group("/auth")
 	auth.Post("/sign-up", authHandler.SignUp)
 	auth.Post("/sign-in", authHandler.SignIn)
-	auth.Post("/refresh", authHandler.RefreshToken)
-	auth.Post("/refresh-with-token", refreshMiddleware, authHandler.RefreshToken)
+	auth.Post("/refresh", refreshMiddleware, authHandler.RefreshToken)
 	auth.Get("/me", authMiddleware, authHandler.Me)
 
 	passwordHandler := handler.NewPasswordHandler(store, tokenMaker, config, emailService)
@@ -30,7 +29,7 @@ func SetupAuthRoutes(api fiber.Router, store db.Querier, tokenMaker token.Maker,
 	auth.Post("/verify-reset-token", passwordHandler.VerifyResetToken)
 	auth.Post("/reset-password", passwordHandler.ResetPassword)
 
-	emailVerificationHandler := handler.NewEmailVerificationHandler(store, config, emailService)
+	emailVerificationHandler := handler.NewEmailVerificationHandler(store, config, tokenMaker, emailService)
 	verifyEmail := auth.Group("/verify-email")
 	verifyEmail.Post("/send-otp", emailVerificationHandler.SendOTP)
 	verifyEmail.Post("/verify", emailVerificationHandler.VerifyOTP)

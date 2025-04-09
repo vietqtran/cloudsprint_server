@@ -12,6 +12,7 @@ type BaseResponse struct {
 	Status     string                   `json:"status"`
 	Message    string                   `json:"message"`
 	Code       constants.HttpStatusCode `json:"code"`
+	ErrorCode  *constants.ErrorCode     `json:"error_code"`
 	Data       interface{}              `json:"data"`
 	Pagination *Pagination              `json:"pagination,omitempty"`
 	Timestamp  time.Time                `json:"timestamp"`
@@ -46,10 +47,11 @@ func NewSuccessResponse(c *fiber.Ctx, code constants.HttpStatusCode, data interf
 	}
 }
 
-func NewErrorResponse(c *fiber.Ctx, code constants.HttpStatusCode, message string, trace error) *BaseResponse {
+func NewErrorResponse(c *fiber.Ctx, code constants.HttpStatusCode, message string, trace error, errorCode *constants.ErrorCode) *BaseResponse {
 	return &BaseResponse{
 		Status:    "error",
 		Code:      code,
+		ErrorCode: errorCode,
 		Message:   message,
 		Data:      nil,
 		Timestamp: time.Now(),
@@ -92,24 +94,24 @@ func Created(c *fiber.Ctx, data interface{}, message string) error {
 	return NewSuccessResponse(c, constants.StatusCreated, data, message).Send(c)
 }
 
-func BadRequest(c *fiber.Ctx, message string, err error) error {
-	return NewErrorResponse(c, constants.StatusBadRequest, message, err).Send(c)
+func BadRequest(c *fiber.Ctx, message string, err error, errorCode *constants.ErrorCode) error {
+	return NewErrorResponse(c, constants.StatusBadRequest, message, err, errorCode).Send(c)
 }
 
-func Unauthorized(c *fiber.Ctx, message string, err error) error {
-	return NewErrorResponse(c, constants.StatusUnauthorized, message, err).Send(c)
+func Unauthorized(c *fiber.Ctx, message string, err error, errorCode *constants.ErrorCode) error {
+	return NewErrorResponse(c, constants.StatusUnauthorized, message, err, errorCode).Send(c)
 }
 
-func Forbidden(c *fiber.Ctx, message string) error {
-	return NewErrorResponse(c, constants.StatusForbidden, message, nil).Send(c)
+func Forbidden(c *fiber.Ctx, message string, errorCode *constants.ErrorCode) error {
+	return NewErrorResponse(c, constants.StatusForbidden, message, nil, errorCode).Send(c)
 }
 
-func NotFound(c *fiber.Ctx, message string, err error) error {
-	response := NewErrorResponse(c, constants.StatusNotFound, message, err)
+func NotFound(c *fiber.Ctx, message string, err error, errorCode *constants.ErrorCode) error {
+	response := NewErrorResponse(c, constants.StatusNotFound, message, err, errorCode)
 	return response.Send(c)
 }
 
-func InternalServerError(c *fiber.Ctx, message string, err error) error {
-	response := NewErrorResponse(c, constants.StatusInternalServerError, message, err)
+func InternalServerError(c *fiber.Ctx, message string, err error, errorCode *constants.ErrorCode) error {
+	response := NewErrorResponse(c, constants.StatusInternalServerError, message, err, errorCode)
 	return response.Send(c)
 }

@@ -23,8 +23,7 @@ ORDER BY created_at DESC;
 UPDATE sessions
 SET
   refresh_token = $2,
-  expires_at = $3,
-  updated_at = now()
+  expires_at = $3
 WHERE id = $1 AND status != 3
 RETURNING *;
 

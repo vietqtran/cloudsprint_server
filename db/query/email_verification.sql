@@ -10,7 +10,8 @@ INSERT INTO email_otps (
 
 -- name: GetEmailOTPByCode :one
 SELECT * FROM email_otps
-WHERE otp = $1 AND email = $2 AND expires_at > NOW() AND used = false
+WHERE email = $1 AND expires_at > NOW() AND used = false
+ORDER BY created_at DESC
 LIMIT 1;
 
 -- name: MarkEmailOTPUsed :exec
