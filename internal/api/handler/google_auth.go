@@ -18,19 +18,19 @@ import (
 )
 
 type GoogleAuthHandler struct {
-	store        db.Querier
-	tokenMaker   token.Maker
-	config       config.Config
-	emailService *service.EmailService
+	store         db.Querier
+	tokenMaker    token.Maker
+	config        config.Config
+	emailService  *service.EmailService
 	googleService *service.GoogleService
 }
 
 func NewGoogleAuthHandler(store db.Querier, tokenMaker token.Maker, config config.Config, emailService *service.EmailService, googleService *service.GoogleService) *GoogleAuthHandler {
 	return &GoogleAuthHandler{
-		store:        store,
-		tokenMaker:   tokenMaker,
-		config:       config,
-		emailService: emailService,
+		store:         store,
+		tokenMaker:    tokenMaker,
+		config:        config,
+		emailService:  emailService,
 		googleService: googleService,
 	}
 }
@@ -150,7 +150,7 @@ func (h *GoogleAuthHandler) GoogleCallback(c *fiber.Ctx) error {
 
 	redirectURL := fmt.Sprintf("%s/auth/callback?access_token=%s&refresh_token=%s&session_id=%s",
 		h.config.FrontendBaseURL, accessToken, refreshToken, session.ID.String())
-	
+
 	return c.Redirect(redirectURL)
 }
 
@@ -165,4 +165,4 @@ func (h *GoogleAuthHandler) getGoogleOAuthConfig() *oauth2.Config {
 		},
 		Endpoint: google.Endpoint,
 	}
-} 
+}

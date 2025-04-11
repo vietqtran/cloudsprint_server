@@ -23,6 +23,7 @@ func (r *ForgotPasswordRequest) Validate() error {
 
 type VerifyResetTokenRequest struct {
 	Token string `json:"token"`
+	Email string `json:"email"`
 }
 
 func (r *VerifyResetTokenRequest) Validate() error {
@@ -35,6 +36,7 @@ func (r *VerifyResetTokenRequest) Validate() error {
 
 type ResetPasswordRequest struct {
 	Token           string `json:"token"`
+	Email           string `json:"email"`
 	Password        string `json:"password"`
 	ConfirmPassword string `json:"confirmPassword"`
 }

@@ -10,7 +10,8 @@ INSERT INTO password_resets (
 
 -- name: GetPasswordResetByToken :one
 SELECT * FROM password_resets
-WHERE token = $1 AND expires_at > NOW() AND used = false
+WHERE email = $1 AND expires_at > NOW() AND used = false
+ORDER BY created_at DESC
 LIMIT 1;
 
 -- name: MarkPasswordResetUsed :exec

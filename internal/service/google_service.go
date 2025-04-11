@@ -61,7 +61,9 @@ func (s *GoogleService) GetUserInfo(token *oauth2.Token) (*GoogleUserInfo, error
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, errors.New("failed to get user info from Google")
@@ -78,4 +80,4 @@ func (s *GoogleService) GetUserInfo(token *oauth2.Token) (*GoogleUserInfo, error
 	}
 
 	return &userInfo, nil
-} 
+}
