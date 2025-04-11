@@ -1,7 +1,7 @@
-CREATE TABLE "accounts" (
+CREATE TABLE IF NOT EXISTS "accounts" (
   "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
   "email" varchar UNIQUE NOT NULL,
-  "hashed_password" varchar NOT NULL,
+  "hashed_password" varchar NULL,
   "user_id" uuid NOT NULL,
   "status" int NOT NULL DEFAULT 1,
   "reset_password_token" varchar NULL,
@@ -14,7 +14,7 @@ CREATE TABLE "accounts" (
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
 
-CREATE TABLE "users" (
+CREATE TABLE IF NOT EXISTS "users" (
   "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
   "email" varchar UNIQUE NOT NULL,
   "first_name" varchar NOT NULL CHECK (LENGTH("first_name") > 1) CHECK (LENGTH("first_name") < 256),
@@ -24,7 +24,7 @@ CREATE TABLE "users" (
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );
 
-CREATE TABLE "sessions" (
+CREATE TABLE IF NOT EXISTS "sessions" (
   "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
   "account_id" uuid NOT NULL,
   "refresh_token" varchar NOT NULL,
@@ -54,8 +54,22 @@ CREATE TABLE IF NOT EXISTS "email_otps" (
   "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
+CREATE TABLE IF NOT EXISTS "oauth_accounts" (
+  "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
+  "account_id" uuid NOT NULL,
+  "provider" varchar NOT NULL,
+  "provider_user_id" varchar NOT NULL,
+  "access_token" varchar NULL,
+  "refresh_token" varchar NULL,
+  "expires_at" timestamptz NULL,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "updated_at" timestamptz NOT NULL DEFAULT (now()),
+  CONSTRAINT "unique_provider_account" UNIQUE ("provider", "provider_user_id")
+);
+
 ALTER TABLE "sessions" ADD FOREIGN KEY ("account_id") REFERENCES "accounts" ("id") ON DELETE CASCADE;
 ALTER TABLE "accounts" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE;
+ALTER TABLE "oauth_accounts" ADD FOREIGN KEY ("account_id") REFERENCES "accounts" ("id") ON DELETE CASCADE;
 
 CREATE INDEX IF NOT EXISTS "users_email_idx" ON "users" ("email");
 CREATE INDEX IF NOT EXISTS "accounts_email_idx" ON "accounts" ("email");
@@ -64,4 +78,7 @@ CREATE INDEX IF NOT EXISTS "sessions_account_id_idx" ON "sessions" ("account_id"
 CREATE INDEX IF NOT EXISTS "password_resets_token_idx" ON "password_resets" ("token");
 CREATE INDEX IF NOT EXISTS "password_resets_email_idx" ON "password_resets" ("email"); 
 CREATE INDEX IF NOT EXISTS "email_otps_email_idx" ON "email_otps" ("email");
-CREATE INDEX IF NOT EXISTS "email_otps_otp_idx" ON "email_otps" ("otp"); 
+CREATE INDEX IF NOT EXISTS "email_otps_otp_idx" ON "email_otps" ("otp");
+CREATE INDEX IF NOT EXISTS "oauth_accounts_account_id_idx" ON "oauth_accounts" ("account_id");
+CREATE INDEX IF NOT EXISTS "oauth_accounts_provider_idx" ON "oauth_accounts" ("provider");
+CREATE INDEX IF NOT EXISTS "oauth_accounts_provider_user_id_idx" ON "oauth_accounts" ("provider_user_id"); 

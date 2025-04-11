@@ -17,6 +17,7 @@ type Config struct {
 	Log             LogConfig
 	Email           EmailConfig
 	FrontendBaseURL string
+	OAuth           OAuthConfig
 }
 
 type ServerConfig struct {
@@ -49,6 +50,12 @@ type EmailConfig struct {
 	FromEmail    string
 	FromName     string
 	TemplatesDir string
+}
+
+type OAuthConfig struct {
+	GoogleClientID     string
+	GoogleClientSecret string
+	GoogleRedirectURL  string
 }
 
 func LoadConfig() (Config, error) {
@@ -102,6 +109,11 @@ func LoadConfig() (Config, error) {
 			TemplatesDir: getEnv("EMAIL_TEMPLATES_DIR", "./templates/emails"),
 		},
 		FrontendBaseURL: getEnv("FRONTEND_BASE_URL", "http://localhost:3000"),
+		OAuth: OAuthConfig{
+			GoogleClientID:     getEnv("CLIENT_ID", ""),
+			GoogleClientSecret: getEnv("CLIENT_SECRET", ""),
+			GoogleRedirectURL:  getEnv("REDIRECT_URL", ""),
+		},
 	}
 
 	return config, nil

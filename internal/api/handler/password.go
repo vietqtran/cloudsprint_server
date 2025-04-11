@@ -163,7 +163,7 @@ func (h *PasswordHandler) ResetPassword(c *fiber.Ctx) error {
 
 	_, err = h.store.UpdateAccountPassword(c.Context(), db.UpdateAccountPasswordParams{
 		ID:             account.ID,
-		HashedPassword: hashedPassword,
+		HashedPassword: sql.NullString{String: hashedPassword, Valid: true},
 	})
 	if err != nil {
 		return response.InternalServerError(c, "Failed to update password", err, nil)

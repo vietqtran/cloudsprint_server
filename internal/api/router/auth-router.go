@@ -13,6 +13,7 @@ import (
 
 func SetupAuthRoutes(api fiber.Router, store db.Querier, tokenMaker token.Maker, config config.Config) {
 	emailService := service.NewEmailService(config.Email)
+	googleService := service.NewGoogleService(config)
 	authHandler := handler.NewAuthHandler(store, tokenMaker, config, emailService)
 
 	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, "access")
@@ -34,4 +35,9 @@ func SetupAuthRoutes(api fiber.Router, store db.Querier, tokenMaker token.Maker,
 	verifyEmail.Post("/send-otp", emailVerificationHandler.SendOTP)
 	verifyEmail.Post("/verify", emailVerificationHandler.VerifyOTP)
 	verifyEmail.Get("/status", authMiddleware, emailVerificationHandler.CheckVerificationStatus)
+
+	googleAuthHandler := handler.NewGoogleAuthHandler(store, tokenMaker, config, emailService, googleService)
+	googleAuth := auth.Group("/google")
+	googleAuth.Get("/auth", googleAuthHandler.GoogleAuth)
+	googleAuth.Get("/callback", googleAuthHandler.GoogleCallback)
 }

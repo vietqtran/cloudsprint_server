@@ -53,3 +53,10 @@ SET
   updated_at = NOW()
 WHERE id = $1
 RETURNING *;
+
+-- name: UpdateAccountEmailVerificationStatus :one
+UPDATE accounts
+SET email_verified = $2,
+    updated_at = NOW()
+WHERE id = $1
+RETURNING *; 

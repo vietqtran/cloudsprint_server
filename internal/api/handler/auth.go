@@ -79,7 +79,7 @@ func (h *AuthHandler) SignUp(c *fiber.Ctx) error {
 	_, err = h.store.CreateAccount(c.Context(), db.CreateAccountParams{
 		UserID:         user.ID,
 		Email:          req.Email,
-		HashedPassword: hashedPassword,
+		HashedPassword: sql.NullString{String: hashedPassword, Valid: true},
 	})
 	if err != nil {
 		return response.InternalServerError(c, "Failed to create account", err, nil)
@@ -150,7 +150,11 @@ func (h *AuthHandler) SignIn(c *fiber.Ctx) error {
 		return response.Unauthorized(c, "Email not verified", nil, &errorCode)
 	}
 
-	err = util.CheckPassword(req.Password, account.HashedPassword)
+	if !account.HashedPassword.Valid {
+		return response.Unauthorized(c, "Invalid email or password", nil, nil)
+	}
+
+	err = util.CheckPassword(req.Password, account.HashedPassword.String)
 	if err != nil {
 		return response.Unauthorized(c, "Invalid email or password", err, nil)
 	}
