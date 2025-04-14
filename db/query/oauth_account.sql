@@ -22,6 +22,11 @@ LIMIT 1;
 SELECT * FROM oauth_accounts 
 WHERE account_id = $1;
 
+-- name: GetOAuthAccountByAccountIDAndProvider :one
+SELECT * FROM oauth_accounts 
+WHERE account_id = $1 AND provider = $2
+LIMIT 1;
+
 -- name: UpdateOAuthAccount :one
 UPDATE oauth_accounts 
 SET 
@@ -34,4 +39,4 @@ RETURNING *;
 
 -- name: DeleteOAuthAccount :exec
 DELETE FROM oauth_accounts 
-WHERE id = $1; 
+WHERE id = $1;

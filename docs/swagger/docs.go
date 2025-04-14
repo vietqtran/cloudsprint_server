@@ -57,6 +57,48 @@ const docTemplate = `{
                 }
             }
         },
+        "/auth/github/auth": {
+            "get": {
+                "description": "Redirect to GitHub for authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Initiate GitHub OAuth",
+                "responses": {}
+            }
+        },
+        "/auth/github/callback": {
+            "get": {
+                "description": "Process the callback from GitHub OAuth",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "GitHub OAuth callback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization code",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "State for CSRF protection",
+                        "name": "state",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {}
+            }
+        },
         "/auth/refresh": {
             "post": {
                 "description": "Refresh access token using refresh token or session ID",
@@ -315,6 +357,68 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/github/repositories": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all GitHub repositories for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "github"
+                ],
+                "summary": "List GitHub repositories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/response.GitHubRepositoryResponse"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/github/repositories/{repo_name}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get a specific GitHub repository by name",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "github"
+                ],
+                "summary": "Get GitHub repository",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Repository name",
+                        "name": "repo_name",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.GitHubRepositoryResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -482,6 +586,9 @@ const docTemplate = `{
                 "confirmPassword": {
                     "type": "string"
                 },
+                "email": {
+                    "type": "string"
+                },
                 "password": {
                     "type": "string"
                 },
@@ -540,6 +647,9 @@ const docTemplate = `{
         "request.VerifyResetTokenRequest": {
             "type": "object",
             "properties": {
+                "email": {
+                    "type": "string"
+                },
                 "token": {
                     "type": "string"
                 }
@@ -575,6 +685,44 @@ const docTemplate = `{
             "properties": {
                 "emailVerified": {
                     "type": "boolean"
+                }
+            }
+        },
+        "response.GitHubRepositoryResponse": {
+            "type": "object",
+            "properties": {
+                "clone_url": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "fork": {
+                    "type": "boolean"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "private": {
+                    "type": "boolean"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         },
@@ -643,6 +791,44 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "service.GitHubRepository": {
+            "type": "object",
+            "properties": {
+                "clone_url": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "fork": {
+                    "type": "boolean"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "html_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "private": {
+                    "type": "boolean"
                 },
                 "updated_at": {
                     "type": "string"

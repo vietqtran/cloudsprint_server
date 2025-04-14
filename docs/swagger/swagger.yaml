@@ -150,6 +150,8 @@ definitions:
     properties:
       confirmPassword:
         type: string
+      email:
+        type: string
       password:
         type: string
       token:
@@ -187,6 +189,8 @@ definitions:
     type: object
   request.VerifyResetTokenRequest:
     properties:
+      email:
+        type: string
       token:
         type: string
     type: object
@@ -211,6 +215,31 @@ definitions:
     properties:
       emailVerified:
         type: boolean
+    type: object
+  response.GitHubRepositoryResponse:
+    properties:
+      clone_url:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      fork:
+        type: boolean
+      full_name:
+        type: string
+      id:
+        type: integer
+      language:
+        type: string
+      name:
+        type: string
+      private:
+        type: boolean
+      updated_at:
+        type: string
+      url:
+        type: string
     type: object
   response.Pagination:
     properties:
@@ -258,6 +287,31 @@ definitions:
       updated_at:
         type: string
     type: object
+  service.GitHubRepository:
+    properties:
+      clone_url:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      fork:
+        type: boolean
+      full_name:
+        type: string
+      html_url:
+        type: string
+      id:
+        type: integer
+      language:
+        type: string
+      name:
+        type: string
+      private:
+        type: boolean
+      updated_at:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -291,6 +345,35 @@ paths:
           schema:
             $ref: '#/definitions/response.BaseResponse'
       summary: Request password reset
+      tags:
+      - auth
+  /auth/github/auth:
+    get:
+      description: Redirect to GitHub for authentication
+      produces:
+      - application/json
+      responses: {}
+      summary: Initiate GitHub OAuth
+      tags:
+      - auth
+  /auth/github/callback:
+    get:
+      description: Process the callback from GitHub OAuth
+      parameters:
+      - description: Authorization code
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: State for CSRF protection
+        in: query
+        name: state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses: {}
+      summary: GitHub OAuth callback
       tags:
       - auth
   /auth/refresh:
@@ -460,4 +543,42 @@ paths:
       summary: Verify reset token
       tags:
       - auth
+  /github/repositories:
+    get:
+      description: Get all GitHub repositories for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/response.GitHubRepositoryResponse'
+            type: array
+      security:
+      - BearerAuth: []
+      summary: List GitHub repositories
+      tags:
+      - github
+  /github/repositories/{repo_name}:
+    get:
+      description: Get a specific GitHub repository by name
+      parameters:
+      - description: Repository name
+        in: path
+        name: repo_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.GitHubRepositoryResponse'
+      security:
+      - BearerAuth: []
+      summary: Get GitHub repository
+      tags:
+      - github
 swagger: "2.0"

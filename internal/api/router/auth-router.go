@@ -14,8 +14,9 @@ import (
 func SetupAuthRoutes(api fiber.Router, store db.Querier, tokenMaker token.Maker, config config.Config) {
 	emailService := service.NewEmailService(config.Email)
 	googleService := service.NewGoogleService(config)
-	authHandler := handler.NewAuthHandler(store, tokenMaker, config, emailService)
+	githubService := service.NewGitHubService(config)
 
+	authHandler := handler.NewAuthHandler(store, tokenMaker, config, emailService)
 	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, "access")
 	refreshMiddleware := middleware.NewAuthMiddleware(tokenMaker, "refresh")
 
@@ -34,10 +35,15 @@ func SetupAuthRoutes(api fiber.Router, store db.Querier, tokenMaker token.Maker,
 	verifyEmail := auth.Group("/verify-email")
 	verifyEmail.Post("/send-otp", emailVerificationHandler.SendOTP)
 	verifyEmail.Post("/verify", emailVerificationHandler.VerifyOTP)
-	verifyEmail.Get("/status", authMiddleware, emailVerificationHandler.CheckVerificationStatus)
+	verifyEmail.Get("/status", emailVerificationHandler.CheckVerificationStatus)
 
 	googleAuthHandler := handler.NewGoogleAuthHandler(store, tokenMaker, config, emailService, googleService)
 	googleAuth := auth.Group("/google")
 	googleAuth.Get("/auth", googleAuthHandler.GoogleAuth)
 	googleAuth.Get("/callback", googleAuthHandler.GoogleCallback)
+
+	githubAuthHandler := handler.NewGitHubAuthHandler(store, tokenMaker, config, emailService, githubService)
+	githubAuth := auth.Group("/github")
+	githubAuth.Get("/auth", githubAuthHandler.GitHubAuth)
+	githubAuth.Get("/callback", githubAuthHandler.GitHubCallback)
 }

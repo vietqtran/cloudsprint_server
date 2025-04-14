@@ -13,4 +13,5 @@ func SetupRoutes(app *fiber.App, store db.Querier, tokenMaker token.Maker, logge
 	api := app.Group("/api/v1")
 
 	SetupAuthRoutes(api, store, tokenMaker, config)
+	SetupGitHubRoutes(api, store, tokenMaker, config)
 }

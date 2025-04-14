@@ -56,6 +56,9 @@ type OAuthConfig struct {
 	GoogleClientID     string
 	GoogleClientSecret string
 	GoogleRedirectURL  string
+	GitHubClientID     string
+	GitHubClientSecret string
+	GitHubRedirectURL  string
 }
 
 func LoadConfig() (Config, error) {
@@ -113,6 +116,9 @@ func LoadConfig() (Config, error) {
 			GoogleClientID:     getEnv("CLIENT_ID", ""),
 			GoogleClientSecret: getEnv("CLIENT_SECRET", ""),
 			GoogleRedirectURL:  getEnv("REDIRECT_URL", ""),
+			GitHubClientID:     getEnv("GitHubClientID", ""),
+			GitHubClientSecret: getEnv("GitHubClientSecret", ""),
+			GitHubRedirectURL:  getEnv("GitHubRedirectURL", ""),
 		},
 	}
 
