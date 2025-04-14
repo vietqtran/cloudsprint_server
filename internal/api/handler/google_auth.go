@@ -37,12 +37,18 @@ func NewGoogleAuthHandler(store db.Querier, tokenMaker token.Maker, config confi
 
 func (h *GoogleAuthHandler) GoogleAuth(c *fiber.Ctx) error {
 	oauthConfig := h.getGoogleOAuthConfig()
-	url := oauthConfig.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	state := generateStateOauthCookie(c)
+	url := oauthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
 	return c.Redirect(url)
 }
 
 func (h *GoogleAuthHandler) GoogleCallback(c *fiber.Ctx) error {
 	fmt.Println("Google callback received")
+
+	state := c.Query("state")
+	if !validateStateOauthCookie(c, state) {
+		return response.BadRequest(c, "Invalid state parameter", nil, nil)
+	}
 
 	code := c.Query("code")
 	if code == "" {
@@ -166,3 +172,4 @@ func (h *GoogleAuthHandler) getGoogleOAuthConfig() *oauth2.Config {
 		Endpoint: google.Endpoint,
 	}
 }
+
