@@ -1,8 +1,8 @@
 .PHONY: all build run test clean migrate sqlc swag docker docker-run format lint pre-commit imports
 
 # Project variables
-BINARY_NAME=cloudsprint_server
-DB_URL=postgresql://cloudsprint_owner:npg_gjk2Kamdy7CD@ep-billowing-scene-a1rfyezw-pooler.ap-southeast-1.aws.neon.tech/cloudsprint?sslmode=require
+BINARY_NAME=<name>
+DB_URL=<db_url>
 MIGRATION_URL=file://db/migration
 
 all: clean sqlc swag build format
@@ -18,11 +18,7 @@ run: build
 watch:
 	@echo "Watching for file changes..."
 	go install github.com/air-verse/air@latest
-ifeq ($(OS),Windows_NT)
 	air
-else
-	air -c .air-linux.toml
-endif
 
 test:
 	@echo "Running tests..."
@@ -34,13 +30,8 @@ clean:
 
 sqlc:
 	@echo "Generating SQLC code..."
-ifeq ($(OS),Windows_NT)
 	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 	sqlc generate -f db/sqlc.yaml
-else
-	go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
-	sqlc generate -f db/sqlc.yaml
-endif
 
 swag:
 	@echo "Generating Swagger documentation..."
