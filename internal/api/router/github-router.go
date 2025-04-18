@@ -13,7 +13,7 @@ import (
 func SetupGitHubRoutes(api fiber.Router, store db.Querier, tokenMaker token.Maker, config config.Config, authMiddleware fiber.Handler) {
 	githubService := service.NewGitHubService(config)
 	
-	githubHandler := handler.NewGitHubHandler(store, tokenMaker, config, githubService)
+	githubHandler := handler.NewGitHubRepositoryHandler(store, tokenMaker, config, githubService)
 	
 	github := api.Group("/github")
 	github.Get("/repositories", authMiddleware, githubHandler.ListRepositories)
