@@ -5,20 +5,17 @@ import (
 
 	"cloud-sprint/config"
 	"cloud-sprint/internal/api/handler"
-	"cloud-sprint/internal/api/middleware"
 	db "cloud-sprint/internal/db/sqlc"
 	"cloud-sprint/internal/service"
 	"cloud-sprint/internal/token"
 )
 
-func SetupAuthRoutes(api fiber.Router, store db.Querier, tokenMaker token.Maker, config config.Config) {
+func SetupAuthRoutes(api fiber.Router, store db.Querier, tokenMaker token.Maker, config config.Config, authMiddleware fiber.Handler, refreshMiddleware fiber.Handler) {
 	emailService := service.NewEmailService(config.Email)
 	googleService := service.NewGoogleService(config)
 	githubService := service.NewGitHubService(config)
 
 	authHandler := handler.NewAuthHandler(store, tokenMaker, config, emailService)
-	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, "access", store, config)
-	refreshMiddleware := middleware.NewAuthMiddleware(tokenMaker, "refresh", store, config)
 
 	auth := api.Group("/auth")
 	auth.Post("/sign-up", authHandler.SignUp)

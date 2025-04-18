@@ -796,44 +796,6 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
-        },
-        "service.GitHubRepository": {
-            "type": "object",
-            "properties": {
-                "clone_url": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "fork": {
-                    "type": "boolean"
-                },
-                "full_name": {
-                    "type": "string"
-                },
-                "html_url": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "language": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "private": {
-                    "type": "boolean"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
         }
     }
 }`
