@@ -34,8 +34,8 @@ func New(store db.Querier, cfg config.Config, log *zap.Logger) (*Server, error) 
 	app.Use(recover.New())
 	app.Use(middleware.CORS())
 
-	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, "Authorization")
-	refreshMiddleware := middleware.NewAuthMiddleware(tokenMaker, "Refresh")
+	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, "Authorization", store, cfg)
+	refreshMiddleware := middleware.NewAuthMiddleware(tokenMaker, "Refresh", store, cfg)
 
 	loggerMiddleware := middleware.NewLogger(log)
 	app.Use(loggerMiddleware)

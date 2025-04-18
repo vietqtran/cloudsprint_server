@@ -17,8 +17,8 @@ func SetupAuthRoutes(api fiber.Router, store db.Querier, tokenMaker token.Maker,
 	githubService := service.NewGitHubService(config)
 
 	authHandler := handler.NewAuthHandler(store, tokenMaker, config, emailService)
-	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, "access")
-	refreshMiddleware := middleware.NewAuthMiddleware(tokenMaker, "refresh")
+	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, "access", store, config)
+	refreshMiddleware := middleware.NewAuthMiddleware(tokenMaker, "refresh", store, config)
 
 	auth := api.Group("/auth")
 	auth.Post("/sign-up", authHandler.SignUp)

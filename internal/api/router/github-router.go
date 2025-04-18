@@ -16,7 +16,7 @@ func SetupGitHubRoutes(api fiber.Router, store db.Querier, tokenMaker token.Make
 
 	githubRepoHandler := handler.NewGitHubRepositoryHandler(store, tokenMaker, config, githubService)
 
-	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, "access")
+	authMiddleware := middleware.NewAuthMiddleware(tokenMaker, "access", store, config)
 
 	github := api.Group("/github")
 	github.Use(authMiddleware)
