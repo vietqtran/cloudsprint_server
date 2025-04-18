@@ -120,7 +120,7 @@ func (h *GitHubRepositoryHandler) ListRepositories(c *fiber.Ctx) error {
 // @Success 200 {object} response.GitHubRepositoryResponse
 // @Router /github/repositories/{repo_name} [get]
 func (h *GitHubRepositoryHandler) GetRepository(c *fiber.Ctx) error {
-	repoName := c.Params("repo_name")
+	repoName := c.Params("repo")
 	if repoName == "" {
 		return response.BadRequest(c, "Repository name is required", nil, nil)
 	}
